@@ -7,6 +7,7 @@ import {
   StyleSheet,
   SafeAreaView,
   TouchableWithoutFeedback,
+  Platform
 } from 'react-native';
 import { Button } from 'react-native-elements';
 import { useNavigation } from '@react-navigation/native';

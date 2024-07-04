@@ -8,6 +8,7 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-nat
 import { RFPercentage, RFValue } from "react-native-responsive-fontsize";
 import * as Animatable from 'react-native-animatable';
 import EnergyAnimation from '../EnergyAnimation';
+import { Fontisto } from '@expo/vector-icons';
 
 const Profile = () => {
   const navigation = useNavigation();
@@ -71,7 +72,7 @@ const Profile = () => {
       <View style={styles.body}>
         {/* Seção de informações do perfil */}
         <View style={styles.profileInfo}>
-          <Ionicons name="ios-mail" size={24} color="black" />
+          <Fontisto name="email" size={24} color="black" />
           <Text style={styles.infoText}>{user?.email}</Text>
         </View>
         {/* Adicione mais informações conforme necessário */}
@@ -80,7 +81,7 @@ const Profile = () => {
       {/* Botão para editar o perfil */}
       <Animatable.View duration={400} animation="fadeInLeft" easing="linear" iterationCount="1" direction="normal" style={{ transform: [{ rotateY: '0deg' }] }}>
         <TouchableOpacity onPress={handleEditProfile} style={styles.editButton}>
-          <Text style={styles.editButtonText}>Editar Perfil</Text>
+          <Text style={styles.editButtonText} disabled={true}>Editar Perfil</Text>
         </TouchableOpacity>
       </Animatable.View>
       

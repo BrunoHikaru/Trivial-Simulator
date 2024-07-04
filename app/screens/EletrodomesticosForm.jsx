@@ -200,24 +200,72 @@ const EletrodomesticosForm = () => {
               placeholder="Quantidade de Aparelhos"
               value={quantidade}
               onChangeText={(value) => setQuantidade(value)}
+              keyboardType='numeric'
             />
             <TextInput
               style={styles.input}
               placeholder="Potência"
               value={potencia}
               onChangeText={(value) => setPotencia(value)}
+              keyboardType='numeric'
             />
             <TextInput
               style={styles.input}
               placeholder="N.º de dias utilizado no mês"
               value={numdiasusadosmes}
-              onChangeText={(value) => setNumDiasUsadosMes(value)}
+              keyboardType='numeric'
+              onChangeText={(value) => {
+                // Verifica se o valor é um número
+                if (!isNaN(value)) {
+                  // Converte o valor para número inteiro
+                  let num = parseInt(value);
+            
+                  // Limita o número entre 0 e 24
+                  if (num >= 0 && num <= 31) {
+                    setNumDiasUsadosMes(num.toString()); // Atualiza o estado com o valor válido
+                  } else if (num > 24) {
+                    Alert.alert('Você só pode inserir um número de 0 a 31')// Define como 24 se o valor for maior que 24
+                    setNumDiasUsadosMes('');
+                    // Aqui você pode adicionar um alerta ao usuário informando que o valor foi ajustado para 24
+                    // ou outro feedback adequado ao seu aplicativo
+                  }
+                } else {
+                  setNumDiasUsadosMes('');
+                  // Caso o valor não seja um número, você pode limpar o valor ou mostrar um aviso
+                   // Limpa o valor do estado
+                  // Aqui você pode adicionar um alerta ao usuário informando que apenas números são permitidos
+                  // ou outro feedback adequado ao seu aplicativo
+                }
+              }}
             />
             <TextInput
               style={styles.input}
               placeholder="Horas de Uso Diária"
               value={horasDeUsoDiaria}
-              onChangeText={(value) => setHorasDeUsoDiaria(value)}
+              keyboardType='numeric'
+              onChangeText={(value) => {
+              // Verifica se o valor é um número
+                if (!isNaN(value)) {
+                // Converte o valor para número inteiro
+                  let num = parseInt(value);
+          
+                // Limita o número entre 0 e 24
+                  if (num >= 0 && num <= 24) {
+                  setHorasDeUsoDiaria(num.toString()); // Atualiza o estado com o valor válido
+                  } else if (num > 24) {
+                  Alert.alert('Você só pode inserir um número de 0 a 24') // Define como 24 se o valor for maior que 24
+                  setHorasDeUsoDiaria('');
+                  // Aqui você pode adicionar um alerta ao usuário informando que o valor foi ajustado para 24
+                  // ou outro feedback adequado ao seu aplicativo
+                  }
+                } else {
+                // Caso o valor não seja um número, você pode limpar o valor ou mostrar um aviso
+                setHorasDeUsoDiaria(''); // Limpa o valor do estado
+                // Aqui você pode adicionar um alerta ao usuário informando que apenas números são permitidos
+                // ou outro feedback adequado ao seu aplicativo
+                }
+              }
+            }
             />
           </KeyboardAvoidingView>
 

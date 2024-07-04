@@ -269,7 +269,7 @@ const Login = () => {
             {selectedIndex === 1 && renderSignUp()}
             {selectedIndex === 2 && renderForgotPassword()}
           </KeyboardAvoidingView>
-          <StatusBar style="light" />
+          
         </SafeAreaView>
       </TouchableWithoutFeedback>
     </ImageBackground>

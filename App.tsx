@@ -87,6 +87,7 @@ function HomeNavigator() {
       <Stack.Screen name='Statistics' component={Statistics} options={{headerShown:false}}/>
       <Stack.Screen name='EstatisticasCalculo' component={EstatisticasCalculo} options={{headerShown:false}}/>
       <Stack.Screen name='EquipamentoScreen' component={EquipamentoScreen} options={{headerShown:false}}/>
+      <Stack.Screen name='Profile' component={Profile} options={{headerShown:false}}/>
       {/* Adicione mais telas específicas da Statistics aqui, se necessário */}
     </Stack.Navigator>
   );
@@ -157,6 +158,3 @@ export default function App() {
  
   );
 };
-
-
-

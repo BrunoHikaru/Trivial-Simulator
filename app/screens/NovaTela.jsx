@@ -1,71 +1,30 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, Platform, TouchableOpacity, Image, ScrollView, TouchableWithoutFeedback,Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Platform, TouchableOpacity, Image, ScrollView, TouchableWithoutFeedback, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getDatabase, ref, get, equalTo, orderByChild } from 'firebase/database';
+import { getDatabase, ref, get } from 'firebase/database';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { Ionicons, MaterialCommunityIcons, AntDesign, MaterialIcons } from '@expo/vector-icons';
 import { PieChart } from 'react-native-chart-kit';
-
 import { useNavigation } from '@react-navigation/native';
 import { RFPercentage } from 'react-native-responsive-fontsize';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { Button } from 'react-native-elements';
-
+import { Entypo } from '@expo/vector-icons';
 
 const NovaTela = ({ route }) => {
   const { cardId, cardName } = route.params;
   const [cardDetails, setCardDetails] = useState(null);
   const [equipamentos, setEquipamentos] = useState([]);
+  const [reloadCount, setReloadCount] = useState(0); // Estado para forçar o reload
   const navigation = useNavigation();
 
   const handleGoBack = () => {
     navigation.goBack();
   };
 
+  // Função para carregar os últimos equipamentos com base no ambiente selecionado
   useEffect(() => {
-    const loadUserCards = async (userId) => {
-      const db = getDatabase();
-      const userCardsCollection = ref(db, `AmbienteCards/${userId}`);
-
-      try {
-        const snapshot = await get(userCardsCollection);
-
-        if (snapshot.exists()) {
-          const cardsArray = [];
-          snapshot.forEach((childSnapshot) => {
-            cardsArray.push({ id: childSnapshot.key, ...childSnapshot.val() });
-          });
-
-          const ultimoCard = cardsArray[cardsArray.length - 1];
-          setCardDetails(ultimoCard);
-
-          if (ultimoCard && ultimoCard.title) {
-            const equipamentosPorAmbiente = await loadEquipamentosPorAmbiente(userId, ultimoCard.title);
-            setEquipamentos(equipamentosPorAmbiente);
-          }
-        } else {
-          setCardDetails(null);
-        }
-      } catch (error) {
-        console.error('Erro ao carregar os cartões:', error);
-      }
-    };
-
-    const auth = getAuth();
-
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        loadUserCards(user.uid);
-      } else {
-        console.error('Erro!');
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    const carregarUltimosEquipamentos2 = async (userId) => {
+    const carregarUltimosEquipamentos = async (userId) => {
       const db = getDatabase();
       const equipamentosRef = ref(db, `equipamentos/${userId}`);
 
@@ -92,21 +51,49 @@ const NovaTela = ({ route }) => {
     const user = auth.currentUser;
 
     if (user) {
-      carregarUltimosEquipamentos2(user.uid);
+      carregarUltimosEquipamentos(user.uid);
     } else {
       setEquipamentos([]);
-      console.log(ConsumoMensal)
     }
-  }, [cardName]);
+  }, [cardName, reloadCount]); // Adicionando reloadCount para forçar a atualização quando necessário
 
+  // Função para verificar se o consumo mensal passou de 15 kWh e exibir um alerta se necessário
+  const verificarConsumoMensal = (equipamentos) => {
+    const consumoTotal = equipamentos.reduce((total, equipamento) => total + equipamento.ConsumoMensal, 0);
+    
+    if (consumoTotal > 20) {
+      Alert.alert(
+        'Alerta de Consumo',
+        'O consumo mensal de alguns equipamentos é maior que 20 kWh (Se encontram em vermelho). ' +
+        'Considere substituir alguns equipamentos por modelos mais eficientes. Você pode verificar equipamentos alternativos clicando no botão, que se encontra no final da página.',
+        [{ text: 'OK', onPress: () => console.log('Alerta fechado') }]
+      );
+    }
+  };
+
+  // Logo após a declaração do useState de 'equipamentos', chame a função verificarConsumoMensal
+  useEffect(() => {
+    verificarConsumoMensal(equipamentos);
+  }, [equipamentos]);
+
+  // Função para navegar para a tela de estatísticas
+  const handleNavigation = () => {
+    navigation.navigate("EstatisticasCalculo", { ambienteSelecionado: cardName });
+  };
+
+  // Função para calcular o consumo total mensal dos equipamentos
+  const calcularConsumoTotal = (equipamentos) => {
+    return equipamentos.reduce((total, equipamento) => total + equipamento.ConsumoMensal, 0);
+  };
+
+  // Função para renderizar o ícone com base no nome do equipamento
   const renderIcon = (equipName, ConsumoMensal) => {
-    console.log("Consumo Mensal: ", ConsumoMensal)
     const color = ConsumoMensal > 50 ? 'red' : 'green';
     
     if (equipName.toLowerCase().includes('notebook') || equipName.toLowerCase().includes('laptop')) {
-      return <Ionicons name="ios-laptop" size={RFPercentage(3)} color={color} />;
+      return <Entypo name="laptop" size={RFPercentage(3)} color={color} />;
     } else if (equipName.toLowerCase().includes('telemóvel') || equipName.toLowerCase().includes('telemovel')) {
-      return <Ionicons name="ios-phone-portrait" size={RFPercentage(3)} color={color} />;
+      return <MaterialCommunityIcons name="cellphone" size={RFPercentage(3)} color={color} />;
     } else if (equipName.toLowerCase().includes('tablet')) {
       return <Ionicons name="ios-tablet-portrait" size={RFPercentage(3)} color={color} />;
     } else if (equipName.toLowerCase().includes('tv') || equipName.toLowerCase().includes('televisão')) {
@@ -119,12 +106,12 @@ const NovaTela = ({ route }) => {
       return <AntDesign name="iconfontdesktop" size={RFPercentage(3)} color={color} />;
     } else if (equipName.toLowerCase().includes('caixa de som') || equipName.toLowerCase().includes('som')) {
       return <MaterialIcons name="speaker" size={RFPercentage(3)} color={color} />;
-    }else if (equipName.toLowerCase().includes('cafeteira')){
-      return <MaterialCommunityIcons  name='coffee-maker-outline'  size={RFPercentage(3)} color={color} />;
+    } else if (equipName.toLowerCase().includes('cafeteira')) {
+      return <MaterialCommunityIcons name='coffee-maker-outline' size={RFPercentage(3)} color={color} />;
+    } else if (equipName.toLowerCase().includes('microondas')) {
+      return <MaterialIcons name='microwave' size={RFPercentage(3)} color={color} />;
     }
-
   };
-  
 
   // Objeto que mapeia os tipos de equipamento para as cores
   const equipColors = {
@@ -137,41 +124,15 @@ const NovaTela = ({ route }) => {
     'monitor': 'cyan',
     'caixa de som': 'magenta',
     'cafeteira': 'lightgreen',
+    'microondas': 'lightblue',
   };
 
-  const handleNavigation = () => {
-    navigation.navigate("EstatisticasCalculo", { ambienteSelecionado: cardName});
-  };
-
-  const calcularConsumoTotal = (equipamentos) => {
-    return equipamentos.ConsumoMensal;
-  };
-
-
-  // Função para verificar se o consumo mensal passou de 15 kWh e exibir um alerta se necessário
-const verificarConsumoMensal = (equipamentos) => {
-  const consumoTotal = equipamentos.reduce((total, equipamento) => total + equipamento.ConsumoMensal, 0);
+  // useEffect para um intervalo que executa a cada 10 segundos
   
-  if (consumoTotal > 15) {
-    Alert.alert(
-      'Alerta de Consumo',
-      'O consumo mensal de alguns equipamentos é maior que 15 kWh (Se encontram em vermelho). ' +
-      'Considere substituir alguns equipamentos por modelos mais eficientes. Você pode verificar equipamentos alternativos clicando no botão, que se encontra no final da página.',
-      
-      [{ text: 'OK', onPress: () => console.log('Alerta fechado') }]
-    );
-  }
-};
-
-// Logo após a declaração do useState de 'equipamentos', chame a função verificarConsumoMensal
-useEffect(() => {
-  verificarConsumoMensal(equipamentos);
-}, [equipamentos]);
-
 
   const handlePesquisa = () => {
     navigation.navigate("EquipamentoScreen");
-  }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -184,39 +145,36 @@ useEffect(() => {
         </View>
       </View>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollStyle}>
-        {cardId ? (
+        
           <>
-          {calcularConsumoTotal(equipamentos) > 20 && (
-            <Text style={styles.sugestao}>
-              O consumo mensal total dos equipamentos é maior que 20 kWh. Considere substituir alguns equipamentos por modelos mais eficientes.
-            </Text>
-          )}
-            <TouchableWithoutFeedback onPress={handleNavigation}>
-              <Text style={styles.statisticsButton}>Dados dos equipamentos</Text>
-            </TouchableWithoutFeedback>
+            {calcularConsumoTotal(equipamentos) > 20 && (
+              <Text style={styles.sugestao}>
+                O consumo mensal total dos equipamentos é maior que 20 kWh. Considere substituir alguns equipamentos por modelos mais eficientes.
+              </Text>
+            )}
+
+            <Button title="Visualizar dados dos equipamentos" onPress={handleNavigation} style={{marginTop:hp(3)}}/>
+
+          
             <View style={{ height: hp(20), flexDirection: 'row', marginTop: hp(10) }}>
-            <PieChart
-              data={equipamentos.map(item => ({
-                name: item.Equip,
-                population: item.ConsumoMensal,
-                color: equipColors[item.Equip.toLowerCase()] || 'gray',
-                
-              }))}
-              width={wp(90)}
-              height={hp(30)}
-              chartConfig={{
-                backgroundColor: '#FFFFFF',
-                decimalPlaces: 2,
-                color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`
-              }}
-              accessor="population"
-              backgroundColor="transparent"
-              paddingLeft="15"
-              absolute
-            />
-              
-              
-              
+              <PieChart
+                data={equipamentos.map(item => ({
+                  name: item.Equip,
+                  population: item.ConsumoMensal,
+                  color: equipColors[item.Equip.toLowerCase()] || 'gray',
+                }))}
+                width={wp(90)}
+                height={hp(30)}
+                chartConfig={{
+                  backgroundColor: '#FFFFFF',
+                  decimalPlaces: 2,
+                  color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`
+                }}
+                accessor="population"
+                backgroundColor="transparent"
+                paddingLeft="15"
+                absolute
+              />
             </View>
             <View style={styles.equipamentosContainer}>
               <Text style={styles.equipamentosTitulo}>Equipamentos:</Text>
@@ -231,26 +189,13 @@ useEffect(() => {
                 )}
               />
             </View>
-            <TouchableWithoutFeedback onPress={handlePesquisa}>
-              <Text style={styles.statisticsButton}>Pesquisar NOVOS equipamentos</Text>
-            </TouchableWithoutFeedback>
-            <Button title="Pesquisar NOVOS equipamentos" onPress={handlePesquisa}/>
+            
+            <Button title="Pesquisar NOVOS equipamentos" onPress={handlePesquisa} style={{marginTop:hp(5)}}/>
           </>
-        ) : (
-          <Text>Carregando...</Text>
-        )}
+        
       </ScrollView>
     </SafeAreaView>
   );
-};
-
-const getRandomColor = () => {
-  const letters = '0123456789ABCDEF';
-  let color = '#';
-  for (let i = 0; i < 6; i++) {
-    color += letters[Math.floor(Math.random() * 16)];
-  }
-  return color;
 };
 
 const styles = StyleSheet.create({
@@ -297,6 +242,7 @@ const styles = StyleSheet.create({
     padding: wp(2),
     borderRadius: 5,
     flexDirection: 'row',
+    marginHorizontal:hp(2)
   },
   buttonStyle: {
     justifyContent: 'flex-start',
@@ -305,14 +251,10 @@ const styles = StyleSheet.create({
   },
   statisticsButton: {
     backgroundColor: '#4CAF50',
-    borderRadius: hp(5),
-    border: 1,
-   
-    borderRightColor:'black',
+    borderRadius: hp(2),
+    borderWidth: 1,
     marginTop: hp(5),
     textAlign: 'center',
-    height: hp(5),
-    width: wp(90),
     marginHorizontal: wp(3),
     fontSize: RFPercentage(2.5),
   },
@@ -320,12 +262,17 @@ const styles = StyleSheet.create({
     flex: 1,
     height: Platform.OS === 'android' ? hp(30) : hp(20) + Platform.OS === 'ios' ? hp(25) : hp(25),
   },
-  scrollStyle:{
-    paddingBottom:hp(
-      Platform.OS === 'android' ? 20 : 0+Platform.OS === 'ios' ? 20: 20
-      
-    )
+  scrollStyle: {
+    paddingBottom: hp(Platform.OS === 'android' ? 20 : 0 + Platform.OS === 'ios' ? 20 : 20)
   },
+  sugestao:{
+    fontSize: RFPercentage(1.5),
+    fontWeight: 'bold',
+    marginTop: hp(1.5),
+    marginHorizontal: wp(3.7),
+   
+    textAlign:'auto'
+  }
 });
 
 export default NovaTela;

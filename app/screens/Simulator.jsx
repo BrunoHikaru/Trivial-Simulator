@@ -10,6 +10,7 @@ const Simulator = () => {
   const [selectedOption, setSelectedOption] = useState(null);
   const [dailyConsumptionHours, setDailyConsumptionHours] = useState('');
   const [nationalPricePerKWh, setNationalPricePerKWh] = useState('');
+  const [etiquetElet, setEtiquetaElet] = useState('');
   const [daysOfMonth, setDaysOfMonth] = useState('');
   const [taxesOrFees, setTaxesOrFees] = useState('');
   const [result, setResult] = useState(null);
@@ -29,9 +30,10 @@ const Simulator = () => {
     const num3 = parseFloat(nationalPricePerKWh);
     const num4 = parseFloat(daysOfMonth);
     const num5 = parseFloat(taxesOrFees);
+    const num6=  parseFloat(etiquetElet);
 
-    if (!isNaN(num2) && !isNaN(num3) && !isNaN(num4) && !isNaN(num5)) {
-      const consumptionResult = num2 * num3 * num4;
+    if (!isNaN(num2) && !isNaN(num3) && !isNaN(num4) && !isNaN(num5) && !isNaN(num6)) {
+      const consumptionResult = num2 * num3 * num4 * num6;
       const finalResult = (consumptionResult + num5).toFixed(2);
 
       // Obtenha uma referência para a base de dados
@@ -48,6 +50,7 @@ const Simulator = () => {
         kwh_price: num3,
         days_of_month: num4,
         taxes_or_fees: num5,
+        etiqueta_elet: num6,
         result: finalResult,
         timestamp: new Date().toISOString(),
       });
@@ -79,41 +82,71 @@ const Simulator = () => {
         </View>
         <ScrollView contentContainerStyle={styles.scrollviewcontent} showsVerticalScrollIndicator={false}>
           {/* Conteúdo da tela */}
-          <Text style={styles.textAboveDropdown}>{'\n\n\n\n'}Pick the company (kWh)</Text>
+          <Text style={styles.textAboveDropdown}>{'\n\n\n\n'}Escolha uma companhia (kWh)</Text>
 
           <RNPickerSelect
             onValueChange={(value) => {
               setSelectedOption(value);
               // Defina os valores automaticamente com base na escolha do usuário
-              setNationalPricePerKWh(value === 'EDP' ? '0.07' : value === 'Repsol' ? '0.06' : '');
+              setEtiquetaElet(value === 'EDP' ? '0.07' : value === 'Repsol' ? '0.06' : '');
             }}
             items={[
-              { label: 'Select an option', value: null },
+              { label: 'Selecione uma Opção', value: null },
               { label: 'EDP', value: 'EDP' },
               { label: 'Repsol', value: 'Repsol' },
               { label: 'Other', value: 'Other' },
             ]}
             style={pickerSelectStyles}
             value={selectedOption}
-
+            
           />
 
 
-          <Text style={styles.inputLabel}>Daily Consumption Hours</Text>
+          <Text style={styles.inputLabel}>Consumo diário em horas</Text>
           <TextInput
             style={styles.input}
-            placeholder="Enter hours"
+            placeholder="Horas"
             keyboardType="numeric"
             value={dailyConsumptionHours}
-            onChangeText={(text) => setDailyConsumptionHours(text)}
+            onChangeText={(value) => {
+              // Verifica se o valor é um número
+              if (!isNaN(value)) {
+                // Converte o valor para número inteiro
+                let num = parseInt(value);
+          
+                // Limita o número entre 0 e 24
+                if (num >= 0 && num <= 24) {
+                  setDailyConsumptionHours(num.toString()); // Atualiza o estado com o valor válido
+                } else if (num > 24) {
+                  Alert.alert('Você só pode inserir um valor de 0 a 24')// Define como 24 se o valor for maior que 24
+                  // Aqui você pode adicionar um alerta ao usuário informando que o valor foi ajustado para 24
+                  // ou outro feedback adequado ao seu aplicativo
+                }
+              } else {
+                // Caso o valor não seja um número, você pode limpar o valor ou mostrar um aviso
+                setDailyConsumptionHours(''); // Limpa o valor do estado
+                // Aqui você pode adicionar um alerta ao usuário informando que apenas números são permitidos
+                // ou outro feedback adequado ao seu aplicativo
+              }
+            }
+          }
           />
 
 
 
-          <Text style={styles.inputLabel}>National Price per kWh</Text>
+          <Text style={styles.inputLabel}>kWh da Etiquetagem Elétrica</Text>
           <TextInput
             style={styles.input}
-            placeholder="Enter price"
+            placeholder="Preço"
+            keyboardType="numeric"
+            value={etiquetElet}
+            onChangeText={(text) => setEtiquetaElet(text)}
+          />
+
+          <Text style={styles.inputLabel}>Preço Nacional por kWh</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Preço Nacional"
             keyboardType="numeric"
             value={nationalPricePerKWh}
             onChangeText={(text) => setNationalPricePerKWh(text)}
@@ -121,31 +154,53 @@ const Simulator = () => {
 
 
 
-          <Text style={styles.inputLabel}>Days of the Month</Text>
+
+          <Text style={styles.inputLabel}>Dias do mês</Text>
           <TextInput
             style={styles.input}
-            placeholder="Enter days"
+            placeholder="Dias"
             keyboardType="numeric"
             value={daysOfMonth}
-            onChangeText={(text) => setDaysOfMonth(text)}
+            onChangeText={(value) => {
+              // Verifica se o valor é um número
+              if (!isNaN(value)) {
+                // Converte o valor para número inteiro
+                let num = parseInt(value);
+          
+                // Limita o número entre 0 e 24
+                if (num >= 0 && num <= 31) {
+                  setDaysOfMonth(num.toString()); // Atualiza o estado com o valor válido
+                } else if (num > 31) {
+                  Alert.alert('Você só pode inserir um número de 0 a 31')// Define como 24 se o valor for maior que 24
+                  setDaysOfMonth(''); 
+                  // Aqui você pode adicionar um alerta ao usuário informando que o valor foi ajustado para 24
+                  // ou outro feedback adequado ao seu aplicativo
+                }
+              } else {
+                // Caso o valor não seja um número, você pode limpar o valor ou mostrar um aviso
+                setDaysOfMonth(''); // Limpa o valor do estado
+                // Aqui você pode adicionar um alerta ao usuário informando que apenas números são permitidos
+                // ou outro feedback adequado ao seu aplicativo
+              }
+            }}
           />
 
 
 
-          <Text style={styles.inputLabel}>Taxes/Fees</Text>
+          <Text style={styles.inputLabel}>Taxas/Impostos</Text>
           <TextInput
             style={styles.input}
-            placeholder="Enter taxes/fees"
+            placeholder="Insira taxas/impostos"
             keyboardType="numeric"
             value={taxesOrFees}
             onChangeText={(text) => setTaxesOrFees(text)}
           />
 
-          <Button title="Calculate" onPress={calculateResult} />
+          <Button title="Calcular" onPress={calculateResult} />
 
           {result !== null && (
             <View style={styles.resultContainer}>
-              <Text style={styles.resultText}>Total Cost: {result}</Text>
+              <Text style={styles.resultText}>Custo Total: {result}</Text>
             </View>
           )}
 
@@ -154,7 +209,7 @@ const Simulator = () => {
             style={styles.image}
           />
         </ScrollView>
-        <StatusBar style="auto" hidden={true} />
+        
       </SafeAreaView>
     </TouchableWithoutFeedback>
   );

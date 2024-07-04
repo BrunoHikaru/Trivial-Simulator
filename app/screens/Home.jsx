@@ -11,6 +11,7 @@ import SunAnimation from './SunAnimation';
 import { getDatabase, ref, set, onValue, get, orderByChild, limitToLast, serverTimestamp, push } from 'firebase/database';
 import EnergyAnimation from '../EnergyAnimation';
 import { RFPercentage } from "react-native-responsive-fontsize";
+import * as WebBrowser from 'expo-web-browser';
 
 const Home = () => {
   const navigation = useNavigation();
@@ -412,16 +413,12 @@ const Home = () => {
         <TouchableWithoutFeedback onPress={toggleConfigurationModal}>
           <View style={styles.centeredView}>
             <View style={styles.modalView}>
-              <TouchableOpacity style={styles.politicaButton}>
+              <TouchableOpacity style={styles.politicaButton} onPress={()=>WebBrowser.openBrowserAsync('https://intellion.pt/politica-de-privacidade-2/')}>
                 <Text style={styles.modalText}>Politíca de Privacidade</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.politicaButton}>
-                <Text style={styles.modalText}>Perguntas Frequentes</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.litigioButton}>
-                <Text style={styles.modalText}>Litígio</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.litigioButton}>
+              
+              
+              <TouchableOpacity style={styles.litigioButton} onPress={()=>WebBrowser.openBrowserAsync('https://intellion.pt/contact/')}>
                 <Text style={styles.modalText}>Suporte</Text>
               </TouchableOpacity>
               
