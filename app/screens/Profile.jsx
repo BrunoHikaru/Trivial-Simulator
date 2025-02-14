@@ -29,10 +29,9 @@ const Profile = () => {
   }, [navigation]);
 
   useFocusEffect(() => {
-    // Reiniciar a animação quando a tela for focada
-    // Você pode adicionar qualquer lógica de reinício de animação aqui, se necessário
+    
     return () => {
-      // Limpar quaisquer recursos quando a tela perder o foco
+      
     };
   });
 
@@ -54,7 +53,7 @@ const Profile = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
+      
       <View style={styles.header}>
         <Text style={styles.headerText}>Profile</Text>
       </View>
@@ -70,29 +69,19 @@ const Profile = () => {
       </View>
       
       <View style={styles.body}>
-        {/* Seção de informações do perfil */}
+       
         <View style={styles.profileInfo}>
           <Fontisto name="email" size={24} color="black" />
           <Text style={styles.infoText}>{user?.email}</Text>
         </View>
-        {/* Adicione mais informações conforme necessário */}
+        
       </View>
 
-      {/* Botão para editar o perfil */}
-      <Animatable.View duration={400} animation="fadeInLeft" easing="linear" iterationCount="1" direction="normal" style={{ transform: [{ rotateY: '0deg' }] }}>
-        <TouchableOpacity onPress={handleEditProfile} style={styles.editButton}>
-          <Text style={styles.editButtonText} disabled={true}>Editar Perfil</Text>
-        </TouchableOpacity>
-      </Animatable.View>
       
-      {/* Botão para fazer logout */}
-      <Animatable.View duration={400} animation="fadeInRight" easing="linear" iterationCount="1" direction="normal" style={{ transform: [{ rotateY: '0deg' }] }}>
-        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-          <Text style={styles.logoutButtonText}>Logout</Text>
-        </TouchableOpacity>
-      </Animatable.View>
       
-      {/* Botão para fazer logout */}
+      
+      
+      
       <Animatable.View duration={400} animation="fadeInLeft" easing="linear" iterationCount="1" direction="normal" style={{ transform: [{ rotateY: '0deg' }] }}>
         <TouchableOpacity onPress={handleEquipamentos} style={styles.calculosButton}>
           <Text style={styles.calculosButtonText}>Cálculo Único por Aparelho</Text>
@@ -105,6 +94,11 @@ const Profile = () => {
         </TouchableOpacity>
       </Animatable.View>
 
+      <Animatable.View duration={400} animation="fadeInRight" easing="linear" iterationCount="1" direction="normal" style={{ transform: [{ rotateY: '0deg' }] }}>
+        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+          <Text style={styles.logoutButtonText}>Logout</Text>
+        </TouchableOpacity>
+      </Animatable.View>
     </SafeAreaView>
   );
 };

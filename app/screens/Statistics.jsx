@@ -11,7 +11,7 @@ const windowWidth = Dimensions.get('window').width;
 const Statistics = () => {
   const [equipamentos, setEquipamentos] = useState([]);
   const [simulatorResults, setSimulatorResults] = useState([]);
-  const [sortOrder, setSortOrder] = useState('recent'); // 'recent' or 'oldest'
+  const [sortOrder, setSortOrder] = useState('recent'); 
   const navigation = useNavigation();
 
   const handleDeleteEquipamento = (equipId) => {
@@ -21,11 +21,11 @@ const Statistics = () => {
     const userId = user ? user.uid : null;
 
     if (userId) {
-      // Remover equipamento da base de dados
+      
       const equipamentoRef = ref(getDatabase(), `equipamentos/${userId}/${equipId}`);
       remove(equipamentoRef);
 
-      // Atualizar o estado removendo o equipamento específico da lista
+      
       setEquipamentos((prevEquipamentos) =>
         prevEquipamentos.filter((equipamento) => equipamento.equipId !== equipId)
       );
@@ -39,11 +39,11 @@ const Statistics = () => {
     const userId = user ? user.uid : null;
 
     if (userId) {
-      // Remover equipamento da base de dados
+      
       const resultRef = ref(getDatabase(), `userResults/${userId}/${resultId}`);
       remove(resultRef);
 
-      // Atualizar o estado removendo o equipamento específico da lista
+      
       setSimulatorResults((prevResultados) =>
         prevResultados.filter((resultado) => resultado.resultId !== resultId)
       );
@@ -57,7 +57,7 @@ const Statistics = () => {
       const userId = user ? user.uid : null;
 
       if (userId) {
-        // Obter equipamentos
+        
         const equipamentosRef = ref(getDatabase(), `equipamentos/${userId}`);
         onValue(equipamentosRef, (snapshot) => {
           const equipamentosData = snapshot.val();
@@ -65,19 +65,19 @@ const Statistics = () => {
             ? Object.entries(equipamentosData).map(([equipId, equipamento]) => ({ equipId, ...equipamento }))
             : [];
 
-          // Adicionando um campo de dataSubmissao usando timestamp do Firebase
+          
           const equipamentosComTimestamp = equipamentosArray.map((equipamento) => ({
             ...equipamento,
             dataSubmissao: equipamento.timestamp,
           }));
 
-          // Ordenar equipamentos com base na escolha de ordenação
+          
           const equipamentosOrdenados = sortEquipamentos(equipamentosComTimestamp, sortOrder);
 
           setEquipamentos(equipamentosOrdenados);
         });
 
-        // Obter resultados do simulador
+        
         const simulatorResultsRef = ref(getDatabase(), `userResults/${userId}`);
         onValue(simulatorResultsRef, (snapshot) => {
           const resultsData = snapshot.val();
@@ -93,7 +93,7 @@ const Statistics = () => {
   }, [sortOrder]);
 
   const sortEquipamentos = (equipamentos, order) => {
-    // Ordenar equipamentos com base no timestamp
+    
     const sortedEquipamentos = equipamentos.sort((a, b) => {
       if (order === 'recente') {
         return b.dataSubmissao - a.dataSubmissao;
@@ -107,16 +107,16 @@ const Statistics = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
+      
       <View style={styles.header}>
         <Text style={styles.headerText}>Statistics</Text>
       </View>
      
-      {/* Conteúdo da tela */}
+      
       <View style={styles.content}>
         
         <Text style={styles.textSize}>Equipamentos Submetidos</Text>
-        {/* Dropdown para escolher a ordem de classificação */}
+        
         <View style={styles.dropdownContainer}>
           <Text>Ordenar por: </Text>
           <RNPickerSelect
@@ -130,7 +130,7 @@ const Statistics = () => {
           />
         </View>
         <ScrollView>
-        {/* Lista de Equipamentos como Cards em ScrollView */}
+        
         <ScrollView horizontal contentContainerStyle={styles.scrollViewContainer}>
           {equipamentos.map((item, index) => (
             <View key={index} style={styles.cardContainer}>
@@ -142,7 +142,7 @@ const Statistics = () => {
                 <Text>Quantidade: {item.Quantidade}</Text>
                 <Text>Ambiente: {item.SelectedEnviroment}</Text>
                 <Text>Consumo Mensal: {item.ConsumoMensal}</Text>
-                {/* Certifique-se de passar o ID corretamente para a função */}
+               
                 <TouchableOpacity onPress={() => handleDeleteEquipamento(item.equipId)} style={styles.deleteButton}>
                   <Text style={styles.deleteButtonText}>Remover</Text>
                 </TouchableOpacity>
@@ -154,7 +154,7 @@ const Statistics = () => {
           <Text style={styles.navigateToButton}>Ir para a Lista</Text>
         </TouchableOpacity>
 
-        {/* Resultados do Simulador */}
+        
         <Text style={styles.textSize}>Resultados do Simulador</Text>
         <ScrollView horizontal contentContainerStyle={styles.scrollViewContainer}>
           {simulatorResults.map((result, index) => (
@@ -219,12 +219,12 @@ const styles = StyleSheet.create({
     borderRadius: RFValue(10),
   },
   cardContainer: {
-    maxWidth: windowWidth - RFValue(50), // Ajuste a largura conforme necessário
+    maxWidth: windowWidth - RFValue(50), 
     margin: RFValue(15),
     marginLeft: RFValue(1),
   },
   cardContainerResults: {
-    maxWidth: windowWidth - RFValue(50), // Ajuste a largura conforme necessário
+    maxWidth: windowWidth - RFValue(50), 
     margin: RFValue(15),
     marginLeft: RFValue(2),
   },

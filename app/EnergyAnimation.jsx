@@ -3,19 +3,19 @@ import { View, StyleSheet, Animated, Easing } from 'react-native';
 
 const EnergyAnimation = () => {
   const energyParticles = useRef([]);
-  const containerSize = 200; // Tamanho do contêiner
-  const numParticles = 30; // Número de partículas de energia
+  const containerSize = 200; 
+  const numParticles = 30; 
 
   useEffect(() => {
     energyParticles.current.forEach((particle, index) => {
-      const duration = 1500 + Math.random() * 1500; // Duração do movimento da partícula (entre 1.5 e 3 segundos)
-      const delay = Math.random() * 1500; // Atraso inicial aleatório para cada partícula
-      const initialX = Math.random() * containerSize; // Posição inicial X aleatória
-      const targetX = Math.random() * containerSize; // Posição alvo X aleatória
-      const initialY = Math.random() * containerSize; // Posição inicial Y aleatória
-      const targetY = Math.random() * containerSize; // Posição alvo Y aleatória
+      const duration = 1500 + Math.random() * 1500; 
+      const delay = Math.random() * 1500; 
+      const initialX = Math.random() * containerSize; 
+      const targetX = Math.random() * containerSize; 
+      const initialY = Math.random() * containerSize; 
+      const targetY = Math.random() * containerSize; 
 
-      // Configura a animação de movimento da partícula
+      
       Animated.loop(
         Animated.sequence([
           Animated.delay(delay),
@@ -52,10 +52,10 @@ const EnergyAnimation = () => {
   return (
     <View style={styles.container}>
       {Array.from(Array(numParticles).keys()).map((index) => {
-        const size = Math.random() * 10 + 5; // Tamanho aleatório da partícula (entre 5 e 15)
-        const color = `rgba(255, 255, 255, ${Math.random()})`; // Cor aleatória com transparência
+        const size = Math.random() * 10 + 5; 
+        const color = `rgba(255, 255, 255, ${Math.random()})`; 
 
-        // Inicializa as animações de tradução para X e Y
+        
         const translateX = useRef(new Animated.Value(Math.random() * containerSize)).current;
         const translateY = useRef(new Animated.Value(Math.random() * containerSize)).current;
 

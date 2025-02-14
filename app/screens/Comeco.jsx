@@ -48,17 +48,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'transparent',
     justifyContent: 'center',
-    alignItems: 'flex-start', // Alinha os itens à esquerda
+    alignItems: 'flex-start', 
   },
   textContainer: {
-    marginLeft: wp(8), // Adiciona margem à esquerda para alinhar os textos
+    marginLeft: wp(8), 
     marginTop: hp(-30),
   },
   text: {
     color: 'white',
     fontSize: RFPercentage(4),
     fontWeight: 'bold',
-    marginBottom: hp(2), // Adiciona espaçamento entre os textos
+    marginBottom: hp(2), 
   },
   gradient: {
     position: 'absolute',
@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
     height: hp(7),
     width: hp(7),
     marginVertical: hp(7),
-    marginLeft: wp(8), // Adiciona margem à esquerda para alinhar a imagem
+    marginLeft: wp(8), 
     borderColor: 'white',
     zIndex: 1,
   },
@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
     color: '#A9A9A0',
     fontSize: RFPercentage(3),
     fontWeight: 'bold',
-    textAlign: 'left', // Alinha o texto à esquerda
+    textAlign: 'left', 
   },
 });
 

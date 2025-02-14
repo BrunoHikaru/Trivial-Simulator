@@ -1,36 +1,49 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Image, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Image, Platform, Modal } from 'react-native';
 import { getDatabase, ref, onValue, remove } from 'firebase/database';
 import { getAuth } from 'firebase/auth';
 import RNPickerSelect from 'react-native-picker-select';
 import { useNavigation } from '@react-navigation/native';
+import * as Haptics from 'expo-haptics';
 import { RFPercentage, RFValue } from "react-native-responsive-fontsize";
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import { Ionicons, MaterialCommunityIcons, AntDesign, MaterialIcons } from '@expo/vector-icons';
+
 
 const windowWidth = Dimensions.get('window').width;
 
-const Statistics = ({route}) => {
+const Statistics = ({ route }) => {
   const [equipamentos, setEquipamentos] = useState([]);
-  const [sortOrder, setSortOrder] = useState('recent'); // 'recent' or 'oldest'
+  const [sortOrder, setSortOrder] = useState('recent'); 
   const navigation = useNavigation();
   const { ambienteSelecionado } = route.params;
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedEquipamento, setSelectedEquipamento] = useState(null);
 
   const handleDeleteEquipamento = (equipId) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy); 
     console.log('Deletar equipamento com ID:', equipId);
     const auth = getAuth();
     const user = auth.currentUser;
     const userId = user ? user.uid : null;
 
     if (userId) {
-      // Remover equipamento da base de dados
+      
       const equipamentoRef = ref(getDatabase(), `equipamentos/${userId}/${equipId}`);
       remove(equipamentoRef);
 
-      // Atualizar o estado removendo o equipamento específico da lista
+      
       setEquipamentos((prevEquipamentos) =>
         prevEquipamentos.filter((equipamento) => equipamento.equipId !== equipId)
       );
     }
+    setIsModalVisible(false); 
+  };
+
+  const handleEditEquipamento = (equipamento) => {
+    
+    navigation.navigate('EditEquipamento', { equipamento });
+    setIsModalVisible(false); 
   };
 
   useEffect(() => {
@@ -38,31 +51,31 @@ const Statistics = ({route}) => {
       const auth = getAuth();
       const user = auth.currentUser;
       const userId = user ? user.uid : null;
-  
+
       if (userId) {
-        // Obter equipamentos
+        
         const equipamentosRef = ref(getDatabase(), `equipamentos/${userId}`);
         onValue(equipamentosRef, (snapshot) => {
           const equipamentosData = snapshot.val();
-  
-          // Verificar se há dados de equipamentos
+
+         
           if (equipamentosData) {
             const equipamentosArray = Object.entries(equipamentosData)
               .map(([equipId, equipamento]) => ({ equipId, ...equipamento }))
-              .filter((equipamento) => equipamento.SelectedEnvironment === ambienteSelecionado); // Filtrar por ambiente selecionado
-  
-            // Adicionando um campo de dataSubmissao usando timestamp do Firebase
+              .filter((equipamento) => equipamento.SelectedEnvironment === ambienteSelecionado); 
+
+            
             const equipamentosComTimestamp = equipamentosArray.map((equipamento) => ({
               ...equipamento,
               dataSubmissao: equipamento.timestamp,
             }));
-  
-            // Ordenar equipamentos com base na escolha de ordenação
+
+            
             const equipamentosOrdenados = sortEquipamentos(equipamentosComTimestamp, sortOrder);
-  
+
             setEquipamentos(equipamentosOrdenados);
           } else {
-            // Se não houver dados de equipamentos, definir a lista como vazia
+            
             setEquipamentos([]);
           }
         });
@@ -73,7 +86,7 @@ const Statistics = ({route}) => {
   }, [ambienteSelecionado, sortOrder]);
 
   const sortEquipamentos = (equipamentos, order) => {
-    // Ordenar equipamentos com base no timestamp
+    
     const sortedEquipamentos = equipamentos.sort((a, b) => {
       if (order === 'recente') {
         return b.dataSubmissao - a.dataSubmissao;
@@ -89,9 +102,14 @@ const Statistics = ({route}) => {
     navigation.goBack();
   }
 
+  const toggleEditModal = (equipamento) => {
+    setSelectedEquipamento(equipamento);
+    setIsModalVisible(!isModalVisible);
+  }
+
   return (
     <View style={styles.container}>
-      {/* Header */}
+      
       <View style={styles.header}>
         <TouchableOpacity onPress={handleGoBack}>
           <Image source={require('../../assets/go_back.png')} style={styles.buttonStyle} />
@@ -100,11 +118,10 @@ const Statistics = ({route}) => {
           <Text style={styles.headerText}>Dados de Equipamentos</Text>
         </View>
       </View>
-     
-      {/* Conteúdo da tela */}
+
       <View style={styles.content}>
         <Text style={styles.textSize}>Equipamentos Submetidos</Text>
-        {/* Dropdown para escolher a ordem de classificação */}
+        
         <View style={styles.dropdownContainer}>
           <Text>Ordenar por: </Text>
           <RNPickerSelect
@@ -118,28 +135,68 @@ const Statistics = ({route}) => {
           />
         </View>
         <ScrollView showsHorizontalScrollIndicator={false} >
-          {/* Lista de Equipamentos como Cards em ScrollView */}
+         
           <ScrollView horizontal contentContainerStyle={styles.scrollViewContainer} showsHorizontalScrollIndicator={false}>
             {equipamentos.map((item, index) => (
               <View key={index} style={styles.cardContainer}>
-                <View style={styles.equipamentoItem}>
+                <TouchableOpacity
+                  onPress={() => console.log('Card pressed', item.equipId)}
+                  onLongPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy); 
+                    toggleEditModal(item); 
+                  }}
+                  style={styles.equipamentoItem}
+                >
                   <Text>Equipamento: {item.Equip}</Text>
                   <Text>Marca: {item.Marca}</Text>
-                  <Text>Horas Diárias: {item.HorasDeUsoDiaria} horas</Text>
+                  <Text>Horas Diárias: {item.HorasDeUsoDiaria}</Text>
                   <Text>Potência: {item.Potencia}</Text>
                   <Text>Quantidade: {item.Quantidade}</Text>
+                  <Text>Dias utilizados no Mês: {item.NumDiasUsadosMes}</Text>
                   <Text>Ambiente: {item.SelectedEnvironment}</Text>
                   <Text>Consumo Mensal: {item.ConsumoMensal}</Text>
-                  {/* Certifique-se de passar o ID corretamente para a função */}
-                  <TouchableOpacity onPress={() => handleDeleteEquipamento(item.equipId)} style={styles.deleteButton}>
-                    <Text style={styles.deleteButtonText}>Remover</Text>
-                  </TouchableOpacity>
-                </View>
+                </TouchableOpacity>
               </View>
             ))}
           </ScrollView>
         </ScrollView>
+        <View style={{flexDirection:'row'}}>
+          <Ionicons name="information-circle-outline" size={wp(8)} color="black" style={{marginTop:Platform.OS==='ios'?hp(-25):hp(-25)+Platform.OS==='android'?hp(-20):hp(-20)}}/>
+          <Text style={{marginTop:Platform.OS==='ios'?hp(-25):hp(-25)+Platform.OS==='android'?hp(-20):hp(-20), marginHorizontal:hp(2),textAlign:'left',fontSize:Platform.OS==='ios'?RFPercentage(1.5):RFPercentage(1.5)+Platform.OS==='android'?RFPercentage(2):RFPercentage(2)}}>
+            Para editar ou deletar um equipamento, pressione e segure por 3 segundos o cartão.
+          </Text>
+        </View>
       </View>
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isModalVisible}
+        onRequestClose={() => setIsModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Escolha uma ação</Text>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => handleEditEquipamento(selectedEquipamento)}
+            >
+              <Text style={styles.modalButtonText}>Editar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.modalButton, styles.modalButtonDelete]}
+              onPress={() => handleDeleteEquipamento(selectedEquipamento.equipId)}
+            >
+              <Text style={styles.modalButtonText}>Excluir</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => setIsModalVisible(false)}
+            >
+              <Text style={styles.modalButtonText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -193,7 +250,7 @@ const styles = StyleSheet.create({
     borderRadius: RFValue(10),
   },
   cardContainer: {
-    maxWidth: windowWidth - RFValue(50), // Ajuste a largura conforme necessário
+    maxWidth: windowWidth - RFValue(50), 
     marginHorizontal: RFValue(15),
   },
   textSize: {
@@ -201,22 +258,38 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: RFValue(10),
   },
-  deleteButton: {
-    color: 'white',
-    marginTop: RFValue(5),
+  modalOverlay: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    fontWeight: 'bold',
-    borderWidth: RFValue(1),
-    borderRadius: RFValue(7),
-    padding: RFValue(3),
-    marginTop: RFValue(15),
-    backgroundColor: 'red',
-    borderColor: 'black',
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
-  deleteButtonText: {
+  modalContent: {
+    width: wp(80),
+    padding: RFValue(20),
+    backgroundColor: 'white',
+    borderRadius: RFValue(10),
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: RFPercentage(2.5),
     fontWeight: 'bold',
+    marginBottom: RFValue(20),
+  },
+  modalButton: {
+    width: '100%',
+    padding: RFValue(10),
+    alignItems: 'center',
+    marginVertical: RFValue(5),
+    borderRadius: RFValue(5),
+    backgroundColor: '#336F95',
+  },
+  modalButtonDelete: {
+    backgroundColor: 'red',
+  },
+  modalButtonText: {
     color: 'white',
+    fontSize: RFPercentage(2),
   },
 });
 

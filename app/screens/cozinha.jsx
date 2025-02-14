@@ -16,11 +16,11 @@ const Cozinha = () => {
   const [imagemAtual, setImagemAtual] = useState(require('../../assets/cozinha_preenchida.jpg'));
 
   const trocarImagem = () => {
-    // Substitua as imagens conforme necessário
+
     const novasImagens = [
       require('../../assets/cozinha_preenchida.jpg'),
       require('../../assets/cozinha_vazia.jpg'),
-    
+
     ];
 
     const indiceAtual = novasImagens.indexOf(imagemAtual);
@@ -30,12 +30,12 @@ const Cozinha = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
+
       <View style={styles.header}>
         <Text style={styles.headerText}>Cozinha</Text>
       </View>
 
-      {/* Imagem clicável */}
+
       <TouchableWithoutFeedback onPress={trocarImagem}>
         <Image source={imagemAtual} style={styles.imageSize} />
       </TouchableWithoutFeedback>

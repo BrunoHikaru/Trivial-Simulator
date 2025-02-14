@@ -27,7 +27,7 @@ const Quarto = () => {
             </View>
       </View>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.contentScroll}>
-        {/* Cartão expansível 1 */}
+        
         <TouchableOpacity
           style={styles.expandingCard}
           onPress={() => handleCardPress(1)}
@@ -54,7 +54,7 @@ const Quarto = () => {
           </View>
         </TouchableOpacity>
 
-        {/* Cartão expansível 2 */}
+        
         <TouchableOpacity
           style={styles.expandingCard}
           onPress={() => handleCardPress(2)}
@@ -93,7 +93,7 @@ const Quarto = () => {
           </View>
         </TouchableOpacity>
 
-        {/* Cartão expansível 3 */}
+        
         <TouchableOpacity
           style={styles.expandingCard}
           onPress={() => handleCardPress(3)}
@@ -132,7 +132,7 @@ const Quarto = () => {
           </View>
         </TouchableOpacity>
 
-        {/* Cartão expansível 4 */}
+       
         <TouchableOpacity
           style={styles.expandingCard}
           onPress={() => handleCardPress(4)}
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginVertical: hp(2),
-    textAlign: 'center', // centralizar o texto
+    textAlign: 'center', 
     marginLeft:hp(-4)
   },
   buttonStyle: {
@@ -250,8 +250,8 @@ const styles = StyleSheet.create({
     marginVertical: hp(2),
   },
   buttonStyle: {
-    height: hp(4), // ajuste a altura conforme necessário
-    width: hp(4), // ajuste a largura conforme necessário
+    height: hp(4), 
+    width: hp(4), 
   },
 });
 

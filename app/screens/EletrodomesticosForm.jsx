@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Text, TextInput, View, Button, StyleSheet, SafeAreaView, Alert, Platform, TouchableWithoutFeedback, Keyboard, FlatList, Image, TouchableOpacity, ScrollView, KeyboardAvoidingView } from 'react-native';
+import { Text, TextInput, View, Button, StyleSheet, SafeAreaView, Alert, Platform, TouchableWithoutFeedback, Keyboard, FlatList, Image, TouchableOpacity, ScrollView, KeyboardAvoidingView, ActivityIndicator, Modal } from 'react-native';
 import { getDatabase, ref, set, onValue, get, orderByChild, limitToLast, serverTimestamp, push } from 'firebase/database';
 import { getAuth } from 'firebase/auth';
 import RNPickerSelect from 'react-native-picker-select';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { RFPercentage, RFValue } from "react-native-responsive-fontsize";
 import { useNavigation } from '@react-navigation/native';
+import * as ImagePicker from 'expo-image-picker';
+
 
 function writeEquipamentos(userId, selectedEnvironment, equipamento, marca, quantidade, numdiasusadosmes, potencia, horasdeusodiaria) {
   const db = getDatabase();
@@ -49,6 +51,133 @@ const EletrodomesticosForm = () => {
   const [equipamentos, setEquipamentos] = useState([]);
   const [environmentNames, setEnvironmentNames] = useState([]);
   const [selectedEnvironment, setSelectedEnvironment] = useState('');
+  const [image, setImage] = useState(null);
+  const [results, setResults] = useState([]);
+  const [selectedResult, setSelectedResult] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      if (Platform.OS !== 'web') {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Desculpe, precisamos de permissão de acesso a câmara para fazer isto funcionar!');
+        }
+      }
+    })();
+  }, []);
+
+  const pickImageFromCamera = async () => {
+    let result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    console.log("Camera result:", result); 
+
+    if (!result.canceled) {
+      const uri = result.assets[0].uri;
+      setImage(uri);
+      console.log("Image URI from camera:", uri); 
+      await uploadImage(uri);
+    }
+  };
+
+  const pickImageFromGallery = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    console.log("Gallery result:", result); 
+
+    if (!result.canceled) {
+      const uri = result.assets[0].uri;
+      setImage(uri);
+      console.log("Image URI from gallery:", uri); 
+      await uploadImage(uri);
+    }
+  };
+
+  const translationDictionary = {
+    "microwave": "Microondas",
+    "computer monitor": "Monitor",
+    "keyboard": "Teclado",
+    "mouse": "Rato",
+    "laptop": "Computador portátil",
+    "refrigerator": "Frigorífico",
+    "television": "Televisão",
+    "oven": "Forno",
+    "air conditioner": "Ar condicionado",
+    "computer keyboard": "Teclado",
+    "desk": "mesa",
+    "washing machine": "Máquina de lavar Roupas",
+    "blender": "Liquidificador",
+    "coffeemaker": "Cafeteira",
+    "mechanical fan": "Ventoinha",
+    "mobile phone": "Telemóvel"
+  };
+
+  const translateTerm = (term) => {
+    return translationDictionary[term.toLowerCase()] || term;
+  };
+
+  const uploadImage = async (uri) => {
+    if (!uri) {
+      Alert.alert('Erro', 'URI da Imagem não está definido');
+      return;
+    }
+
+    console.log("Uploading image URI:", uri); 
+
+    let apiUrl = 'http://13.37.58.38:5000/upload'; 
+
+    let uriParts = uri.split('.');
+    let fileType = uriParts[uriParts.length - 1];
+
+    let formData = new FormData();
+    formData.append('file', {
+      uri: Platform.OS === 'android' ? uri : uri.replace('file://', ''),
+      name: `photo.${fileType}`,
+      type: `image/${fileType}`,
+    });
+
+    console.log("FormData:", formData); 
+
+    setUploading(true); 
+
+    try {
+      let response = await fetch(apiUrl, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      let data = await response.json();
+
+    
+      let top5Results = data.slice(0, 5);
+
+     
+      let translatedResults = top5Results.map(result => translateTerm(result));
+
+      console.log('Translated Top 5 Results:', translatedResults);
+      setResults(translatedResults);
+      setUploading(false); 
+      setModalVisible(true);
+
+    } catch (error) {
+      console.error('Error:', error);
+      Alert.alert('Falha no carregamento!', error.message);
+      setUploading(false); 
+    }
+  };
 
   useEffect(() => {
     const carregarUltimosEquipamentos = async (userId) => {
@@ -76,6 +205,65 @@ const EletrodomesticosForm = () => {
       setEquipamentos([]);
     }
   }, [ultimoEquipamento]);
+
+  useEffect(() => {
+    if (equipamento.toLowerCase() === 'notebook' || equipamento.toLowerCase() === 'laptop' || equipamento.toLowerCase() === 'computador portátil' || equipamento.toLowerCase() === 'portátil') {
+      setPotencia('45');
+      setQuantidade('1')
+    }
+    if (equipamento.toLowerCase() === 'telemóvel' || equipamento.toLowerCase() === 'telefone') {
+      setPotencia('15');
+      setQuantidade('1')
+    }
+    if (equipamento.toLowerCase() === 'tablet' || equipamento.toLowerCase() === 'ipad') {
+      setPotencia('15');
+      setQuantidade('1')
+    }
+    if (equipamento.toLowerCase() === 'tv' || equipamento.toLowerCase() === 'televisão') {
+      setPotencia('300');
+      setQuantidade('1')
+    }
+    if (equipamento.toLowerCase() === 'cafeteira') {
+      setPotencia('900');
+      setQuantidade('1')
+    }
+    if (equipamento.toLowerCase() === 'microondas') {
+      setPotencia('700');
+      setQuantidade('1')
+    }
+    if (equipamento.toLowerCase() === 'liquidificador') {
+      setPotencia('650');
+      setQuantidade('1')
+    }
+    if (equipamento.toLowerCase() === 'impressora') {
+      setPotencia('50');
+      setQuantidade('1')
+    }
+    if (equipamento.toLowerCase() === 'monitor' || equipamento.toLowerCase() === 'tela') {
+      setPotencia('50');
+      setQuantidade('3')
+    }
+    if (equipamento.toLowerCase() === 'caixa de som' || equipamento.toLowerCase() === 'som') {
+      setPotencia('100');
+      setQuantidade('1')
+    }
+    if (equipamento.toLowerCase() === 'máquina de lavar roupas' || equipamento.toLowerCase() === 'lavar roupas') {
+      setPotencia('1000');
+      setQuantidade('2')
+    }
+    if (equipamento.toLowerCase() === 'máquina de lavar loiça' || equipamento.toLowerCase() === 'lavar loiça') {
+      setPotencia('1300');
+      setQuantidade('2')
+    }
+    if (equipamento.toLowerCase() === 'videogame' || equipamento.toLowerCase() === 'playstation' || equipamento.toLowerCase() === 'xbox') {
+      setPotencia('300');
+      setQuantidade('3')
+    }
+    if (equipamento.toLowerCase() === 'ar condicionado') {
+      setPotencia('1300');
+      setQuantidade('2')
+    }
+  }, [equipamento]);
 
   const handleSubmit = () => {
     if (!equipamento || !marca || !horasDeUsoDiaria || !quantidade || !selectedEnvironment || !numdiasusadosmes || !potencia) {
@@ -151,20 +339,19 @@ const EletrodomesticosForm = () => {
     navigation.goBack();
   }
 
-
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-        <TouchableOpacity onPress={handleGoBack}>
-              <Image source={require('../../assets/go_back.png')} style={styles.buttonStyle} />
-            </TouchableOpacity>
-            <View style={styles.headerTextContainer}>
-                <Text style={styles.headerText}>Formulário</Text>
-            </View>
+          <TouchableOpacity onPress={handleGoBack}>
+            <Image source={require('../../assets/go_back.png')} style={styles.buttonStyle} />
+          </TouchableOpacity>
+          <View style={styles.headerTextContainer}>
+            <Text style={styles.headerText}>Formulário</Text>
+          </View>
         </View>
         <Text>{'\n\n'}</Text>
-        
+
         <View style={styles.formTextoContainer}>
           <Text style={styles.formTexto}>Formulário de Equipamentos:</Text>
         </View>
@@ -173,114 +360,179 @@ const EletrodomesticosForm = () => {
           <Image source={require('../../assets/aplicativo-movel.png')} style={styles.imageSize} />
           <Image source={require('../../assets/computador-portatil.png')} style={styles.imageSize} />
         </View>
+
         <ScrollView contentContainerStyle={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <View style={styles.formContainer}>
-          <RNPickerSelect
-            style={pickerSelectStyles}
-            value={selectedEnvironment}
-            placeholder={{ label: 'Escolha o ambiente', value: null }}
-            onValueChange={(value) => setSelectedEnvironment(value)}
-            items={environmentNames}
-          />
-          <KeyboardAvoidingView behavior='padding' keyboardVerticalOffset={-110}>
-            <TextInput
-              style={styles.input}
-              placeholder="Equipamento"
-              value={equipamento}
-              onChangeText={(value) => setEquipamento(value)}
+          <View style={{ flexDirection: 'row', alignContent: 'space-between' }}>
+            <TouchableOpacity style={styles.cameraButton} onPress={pickImageFromCamera}>
+              <Text style={{ borderRadius: 2, textAlign: 'center', marginTop: hp(0.6) }}>Usar a câmara</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.galeriaButton} onPress={pickImageFromGallery}>
+              <Text style={{ borderRadius: 2, textAlign: 'center', marginTop: hp(0.6) }}>Escolher da galeria</Text>
+            </TouchableOpacity>
+          </View>
+          {image && <Image source={{ uri: image }} style={styles.image} />}
+
+          {uploading && <ActivityIndicator size="large" color="#0000ff" />}
+          <View style={styles.formContainer}>
+            <RNPickerSelect
+              style={pickerSelectStyles}
+              value={selectedEnvironment}
+              placeholder={{ label: 'Escolha o ambiente', value: null }}
+              onValueChange={(value) => setSelectedEnvironment(value)}
+              items={environmentNames}
+              autoCorrect={false}
+              autoCapitalize="none"
+              spellCheck={false}
             />
-            <TextInput
-              style={styles.input}
-              placeholder="Marca"
-              value={marca}
-              onChangeText={(value) => setMarca(value)}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Quantidade de Aparelhos"
-              value={quantidade}
-              onChangeText={(value) => setQuantidade(value)}
-              keyboardType='numeric'
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Potência"
-              value={potencia}
-              onChangeText={(value) => setPotencia(value)}
-              keyboardType='numeric'
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="N.º de dias utilizado no mês"
-              value={numdiasusadosmes}
-              keyboardType='numeric'
-              onChangeText={(value) => {
-                // Verifica se o valor é um número
-                if (!isNaN(value)) {
-                  // Converte o valor para número inteiro
-                  let num = parseInt(value);
-            
-                  // Limita o número entre 0 e 24
-                  if (num >= 0 && num <= 31) {
-                    setNumDiasUsadosMes(num.toString()); // Atualiza o estado com o valor válido
-                  } else if (num > 24) {
-                    Alert.alert('Você só pode inserir um número de 0 a 31')// Define como 24 se o valor for maior que 24
+
+            <KeyboardAvoidingView behavior='padding' keyboardVerticalOffset={-110}>
+              <Text style={styles.textForm}>Equipamento:</Text>
+              <TextInput
+                style={styles.input}
+                placeholder='Ex.Laptop'
+                value={equipamento}
+                onChangeText={(value) => setEquipamento(value)}
+                autoCorrect={false}
+                autoCapitalize="none"
+                spellCheck={false}
+              />
+
+              <Text style={styles.textForm}>Marca:</Text>
+              <TextInput
+                style={styles.input}
+                placeholder='Ex.Dell'
+                value={marca}
+                onChangeText={(value) => setMarca(value)}
+                autoCorrect={false}
+                autoCapitalize="none"
+                spellCheck={false}
+              />
+
+              <Text style={styles.textForm}>Quantidade de Aparelhos:</Text>
+              <TextInput
+                style={styles.input}
+                placeholder='Ex.1'
+                value={quantidade}
+                onChangeText={(value) => setQuantidade(value)}
+                keyboardType='numeric'
+                autoCorrect={false}
+                autoCapitalize="none"
+                spellCheck={false}
+              />
+              <Text style={styles.textForm}>Potência:</Text>
+              <TextInput
+                style={styles.input}
+                placeholder='Ex.45'
+                value={potencia}
+                onChangeText={(value) => setPotencia(value)}
+                keyboardType='numeric'
+                autoCorrect={false}
+                autoCapitalize="none"
+                spellCheck={false}
+              />
+              <Text style={styles.textForm}>N.º de dias utilizado no mês:</Text>
+              <TextInput
+                style={styles.input}
+                placeholder='Ex.27'
+                value={numdiasusadosmes}
+                keyboardType="numeric"
+                autoCorrect={false}
+                autoCapitalize="none"
+                spellCheck={false}
+                onChangeText={(value) => {
+                  if (value === '') {
+                    setNumDiasUsadosMes(''); 
+                    return;
+                  }
+                  if (!isNaN(value)) {
+                    let num = parseInt(value);
+                    if (num >= 0 && num <= 31) {
+                      setNumDiasUsadosMes(num.toString());
+                    } else if (num > 31) {
+                      Alert.alert('Você só pode inserir um número de 0 a 31');
+                      setNumDiasUsadosMes('');
+                    }
+                  } else {
                     setNumDiasUsadosMes('');
-                    // Aqui você pode adicionar um alerta ao usuário informando que o valor foi ajustado para 24
-                    // ou outro feedback adequado ao seu aplicativo
                   }
-                } else {
-                  setNumDiasUsadosMes('');
-                  // Caso o valor não seja um número, você pode limpar o valor ou mostrar um aviso
-                   // Limpa o valor do estado
-                  // Aqui você pode adicionar um alerta ao usuário informando que apenas números são permitidos
-                  // ou outro feedback adequado ao seu aplicativo
-                }
-              }}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Horas de Uso Diária"
-              value={horasDeUsoDiaria}
-              keyboardType='numeric'
-              onChangeText={(value) => {
-              // Verifica se o valor é um número
-                if (!isNaN(value)) {
-                // Converte o valor para número inteiro
-                  let num = parseInt(value);
-          
-                // Limita o número entre 0 e 24
-                  if (num >= 0 && num <= 24) {
-                  setHorasDeUsoDiaria(num.toString()); // Atualiza o estado com o valor válido
-                  } else if (num > 24) {
-                  Alert.alert('Você só pode inserir um número de 0 a 24') // Define como 24 se o valor for maior que 24
-                  setHorasDeUsoDiaria('');
-                  // Aqui você pode adicionar um alerta ao usuário informando que o valor foi ajustado para 24
-                  // ou outro feedback adequado ao seu aplicativo
+                }}
+              />
+              <Text style={styles.textForm}>Horas de Uso Diária:</Text>
+              <TextInput
+                style={styles.input}
+                placeholder='Ex.10'
+                value={horasDeUsoDiaria}
+                keyboardType='numeric'
+                autoCorrect={false}
+                autoCapitalize="none"
+                spellCheck={false}
+                onChangeText={(value) => {
+                  if (value === '') {
+                    setHorasDeUsoDiaria(''); 
+                    return;
                   }
-                } else {
-                // Caso o valor não seja um número, você pode limpar o valor ou mostrar um aviso
-                setHorasDeUsoDiaria(''); // Limpa o valor do estado
-                // Aqui você pode adicionar um alerta ao usuário informando que apenas números são permitidos
-                // ou outro feedback adequado ao seu aplicativo
-                }
-              }
-            }
-            />
-          </KeyboardAvoidingView>
+                  if (!isNaN(value)) {
+                    let num = parseInt(value);
+                    if (num >= 0 && num <= 24) {
+                      setHorasDeUsoDiaria(num.toString());
+                    } else if (num > 24) {
+                      Alert.alert('Você só pode inserir um número de 0 a 24')
+                      setHorasDeUsoDiaria('');
+                    }
+                  } else {
+                    setHorasDeUsoDiaria('');
+                  }
+                }}
+              />
+            </KeyboardAvoidingView>
 
-          <TouchableOpacity onPress={handleSubmit} style={styles.submeterButton}>
-            <Text style={styles.submeterButtonText}>Submeter</Text>
-          </TouchableOpacity>
+            <TouchableOpacity onPress={handleSubmit} style={styles.submeterButton}>
+              <Text style={styles.submeterButtonText}>Submeter</Text>
+            </TouchableOpacity>
 
-          <Text>{'\n\n'}</Text>
+            <Text>{'\n\n'}</Text>
 
-          {ultimoEquipamento && (
-            <View style={styles.ultimoEquipamentoContainer}>
-              <Text style={styles.ultimoEquipamentoTexto}>Último Equipamento Submetido:  {'\n --> '}{ultimoEquipamento}</Text>
+            {ultimoEquipamento && (
+              <View style={styles.ultimoEquipamentoContainer}>
+                <Text style={styles.ultimoEquipamentoTexto}>Último Equipamento Submetido:  {'\n --> '}{ultimoEquipamento}</Text>
+              </View>
+            )}
+          </View>
+
+          <Modal
+            animationType="slide"
+            transparent={true}
+            visible={modalVisible}
+            onRequestClose={() => {
+              setModalVisible(!modalVisible);
+            }}>
+            <View style={styles.modalContainer}>
+              <View style={styles.modalView}>
+                <Text style={styles.modalTitle}>Equipamentos detectados:</Text>
+                <RNPickerSelect
+                  onValueChange={(itemValue) => {
+                    setSelectedResult(itemValue);
+                    setEquipamento(itemValue);
+                  }}
+                  items={results.map((result) => ({
+                    label: result,
+                    value: result,
+                  }))}
+                  placeholder={{
+                    label: 'Selecione um objeto...',
+                    value: null,
+                  }}
+                />
+                <Button
+                  title="Confirmar"
+                  onPress={() => {
+                    setModalVisible(!modalVisible);
+                  }}
+                />
+              </View>
             </View>
-          )}
-        </View>
+          </Modal>
         </ScrollView>
       </SafeAreaView>
     </TouchableWithoutFeedback>
@@ -315,8 +567,9 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginVertical: hp(2),
-    textAlign: 'center', // centralizar o texto
-    marginLeft:hp(-4)
+    textAlign: 'center',
+    marginLeft: hp(-4),
+
   },
   formContainer: {
     paddingHorizontal: wp(5),
@@ -334,11 +587,11 @@ const styles = StyleSheet.create({
   formTextoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: hp(0),
+    marginTop: hp(-2),
     justifyContent: 'center',
   },
   formTexto: {
-    fontSize: RFPercentage(2.5),
+    fontSize: Platform.OS === 'ios' ? RFPercentage(2.5) : RFPercentage(2, 5) + Platform.OS === 'android' ? RFPercentage(3) : RFPercentage(3),
     fontWeight: 'bold',
     color: '#336F95',
   },
@@ -380,13 +633,62 @@ const styles = StyleSheet.create({
     fontSize: RFPercentage(2),
     fontWeight: 'bold',
   },
-  scrollView:{
-    paddingBottom: hp(10),
+  scrollView: {
+    paddingBottom: hp(25),
   },
   buttonStyle: {
-    height: hp(4), // ajuste a altura conforme necessário
-    width: hp(4), // ajuste a largura conforme necessário
+    height: hp(4),
+    width: hp(4),
   },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalView: {
+    width: 300,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: Platform.OS === 'ios' ? RFPercentage(2) : RFPercentage(2) + Platform.OS === 'android' ? RFPercentage(2.5) : RFPercentage(2.5),
+    marginBottom: hp(3),
+    textAlign: 'center',
+  },
+  cameraButton: {
+    borderRadius: 10,
+    borderWidth: 1,
+    marginVertical: hp(3),
+    height: Platform.OS === 'android' ? hp(5) : hp(5) + Platform.OS === 'ios' ? hp(4) : hp(4),
+    width: wp(40),
+    backgroundColor: 'lightblue',
+    marginLeft: hp(2.7),
+    marginRight: Platform.OS === 'ios' ? hp(3.9) : hp(3.9) + Platform.OS === 'android' ? hp(5.2) : hp(5.2)
+  },
+  galeriaButton: {
+    borderRadius: 10,
+    borderWidth: 1,
+    marginVertical: hp(3),
+    height: Platform.OS === 'android' ? hp(5) : hp(5) + Platform.OS === 'ios' ? hp(4) : hp(4),
+    width: wp(40),
+    backgroundColor: 'lightblue',
+  },
+  textForm: {
+    fontSize: Platform.OS === 'ios' ? RFPercentage(1.8) : RFPercentage(1.8) + Platform.OS === 'android' ? RFPercentage(2.3) : RFPercentage(2.3),
+    marginHorizontal: hp(1),
+    marginBottom: hp(0.5)
+  }
 });
 
 const pickerSelectStyles = StyleSheet.create({

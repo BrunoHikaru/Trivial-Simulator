@@ -264,10 +264,10 @@ const Home = () => {
                   <TouchableOpacity 
                   onPress={() => handleCardPress(card.id)}
                   onLongPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy); // Adiciona vibração
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy); 
                     setLongPressActive(true);
                     setSelectedCard(card);
-                    toggleEditModal(); // Abre o pop-up de edição
+                    toggleEditModal(); 
                   }}
                   >
                     <FontAwesome5 name={card.iconName} size={wp(20)} color="white" style={{ alignSelf: 'center', marginTop: hp(3) }} />
@@ -377,7 +377,7 @@ const Home = () => {
           <View style={styles.centeredView}>
             <View style={styles.modalView}>
               <Text style={{ fontSize: 20, fontWeight: 'bold'}}>Instruções{'\n'}</Text>
-              <Text style={styles.modalText}>Para começar, adicione um ambiente clicando no botão "+" para continuar.</Text>
+              <Text style={styles.modalText}>Para começar, adicione um ambiente clicando no botão "+" e escolha um nome para continuar.</Text>
               <Text style={styles.modalText}>Se segurar por alguns segundos o cartão de cada ambiente, aparecera as opções de alterar nome, deletar.</Text>
               <Text style={styles.modalText}>Ao submeter equipamentos no ambiente por meio dos formulários, eles serão adicionados automaticamente.</Text>
             </View>
@@ -402,7 +402,7 @@ const Home = () => {
 
 
 
-    {/* Config Modal */}
+    
     <Modal
         animationType="slide"
         transparent={true}
@@ -472,7 +472,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: Platform.OS === 'android' ? hp(5) : hp(5)+ Platform.OS === 'ios' ? hp(0) : hp(7), // To account for the notch in iOS devices
+    marginTop: Platform.OS === 'android' ? hp(5) : hp(5)+ Platform.OS === 'ios' ? hp(0) : hp(7), 
     paddingHorizontal: wp(5),
   },
   headerText: {
@@ -555,9 +555,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    
   },
   modalView: {
     margin: wp(5),
+    marginHorizontal:wp(10),
     backgroundColor: 'white',
     borderRadius: wp(5),
     padding: wp(3),

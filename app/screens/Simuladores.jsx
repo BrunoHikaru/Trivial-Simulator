@@ -13,13 +13,13 @@ const Simuladores = () => {
 
     return (
         <SafeAreaView style={styles.container}>
-            {/* Header */}
+            
             <View style={styles.header}>
                 <Text style={styles.headerText}>Simuladores</Text>
             </View>
 
             <ScrollView contentContainerStyle={styles.scrollView} showsVerticalScrollIndicator={false}>
-                {/* Cards */}
+                
                 <TouchableOpacity
                     style={[styles.cardContainer, { backgroundColor: 'rgba(0, 0, 255, 0.4)' }]}
                     onPress={() => handleCardPress('Simulator')}

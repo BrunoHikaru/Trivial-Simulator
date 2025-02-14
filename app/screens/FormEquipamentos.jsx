@@ -156,7 +156,7 @@ const FormEquipamentos = () => {
               <Image source={require('../../assets/go_back.png')} style={styles.buttonStyle} />
             </TouchableOpacity>
             <View style={styles.headerTextContainer}>
-                <Text style={styles.headerText}>Simulator</Text>
+                <Text style={styles.headerText}>Simulador</Text>
             </View>
         </View>
         <View style={styles.formContainer}>
@@ -187,25 +187,27 @@ const FormEquipamentos = () => {
             value={horasDeUsoDiaria}
             keyboardType='numeric'
             onChangeText={(value) => {
-              // Verifica se o valor é um número
+              if (value === '') {
+                setHorasDeUsoDiaria(''); 
+                return;
+              }
+              
               if (!isNaN(value)) {
-                // Converte o valor para número inteiro
+                
                 let num = parseInt(value);
           
-                // Limita o número entre 0 e 24
+                
                 if (num >= 0 && num <= 24) {
-                  setHorasDeUsoDiaria(num.toString()); // Atualiza o estado com o valor válido
+                  setHorasDeUsoDiaria(num.toString()); 
                 } else if (num > 24) {
-                  Alert.alert('Você só pode inserir um número de 0 a 31') // Define como 24 se o valor for maior que 24
+                  Alert.alert('Você só pode inserir um número de 0 a 24') 
                   setHorasDeUsoDiaria('');
-                  // Aqui você pode adicionar um alerta ao usuário informando que o valor foi ajustado para 24
-                  // ou outro feedback adequado ao seu aplicativo
+                 
                 }
               } else {
-                // Caso o valor não seja um número, você pode limpar o valor ou mostrar um aviso
-                setHorasDeUsoDiaria(''); // Limpa o valor do estado
-                // Aqui você pode adicionar um alerta ao usuário informando que apenas números são permitidos
-                // ou outro feedback adequado ao seu aplicativo
+                
+                setHorasDeUsoDiaria(''); 
+                
               }
             }}
           />
@@ -262,7 +264,7 @@ const styles = StyleSheet.create({
       fontSize: 20,
       fontWeight: 'bold',
       marginVertical: hp(2),
-      textAlign: 'center', // centralizar o texto
+      textAlign: 'center', 
       marginLeft:hp(-4)
     },
     formContainer: {
@@ -292,8 +294,8 @@ const styles = StyleSheet.create({
     
     },
     buttonStyle: {
-      height: hp(4), // ajuste a altura conforme necessário
-      width: hp(4), // ajuste a largura conforme necessário
+      height: hp(4), 
+      width: hp(4), 
     },
 });
 const pickerSelectStyles = StyleSheet.create({

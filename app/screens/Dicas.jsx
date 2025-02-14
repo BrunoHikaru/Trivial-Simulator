@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Text, View, StyleSheet, SafeAreaView, TouchableOpacity, Platform, Image, ScrollView } from 'react-native';
+import { Text, View, StyleSheet, SafeAreaView, TouchableOpacity, Platform, Image, ScrollView, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { RFPercentage } from "react-native-responsive-fontsize";
+
 const Dicas = () => {
   const navigation = useNavigation();
 
@@ -13,9 +14,7 @@ const Dicas = () => {
   const handleCardPress = (cardType) => {
     switch (cardType) {
       case 'Geral':
-        setShowMoreInfoGeral(!showMoreInfoGeral);
-        setShowMoreInfoQuarto(false);
-        setShowMoreInfoCozinha(false);
+        navigation.navigate('DicasGerais');
         break;
       case 'Quarto':
         navigation.navigate('Quarto');
@@ -81,6 +80,7 @@ const Dicas = () => {
           </View>
         )}
       </ScrollView>
+     
     </SafeAreaView>
   );
 };

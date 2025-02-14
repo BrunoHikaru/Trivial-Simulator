@@ -9,43 +9,43 @@ import { useNavigation } from '@react-navigation/native';
 const Simulator = () => {
   const [selectedOption, setSelectedOption] = useState(null);
   const [dailyConsumptionHours, setDailyConsumptionHours] = useState('');
-  const [nationalPricePerKWh, setNationalPricePerKWh] = useState('');
+  const [nationalPricePerKWh, setNationalPricePerKWh] = useState('0.17'); 
   const [etiquetElet, setEtiquetaElet] = useState('');
   const [daysOfMonth, setDaysOfMonth] = useState('');
   const [taxesOrFees, setTaxesOrFees] = useState('');
+ 
   const [result, setResult] = useState(null);
 
   const calculateResult = () => {
     const user = getAuth().currentUser;
 
     if (!user) {
-      // Usuário não autenticado
+      
       return;
     }
 
     const uid = user.uid;
 
-    const num1 = parseFloat(selectedOption === 'EDP' ? 0.07 : selectedOption === 'Repsol' ? 0.06 : 0);
     const num2 = parseFloat(dailyConsumptionHours);
     const num3 = parseFloat(nationalPricePerKWh);
     const num4 = parseFloat(daysOfMonth);
     const num5 = parseFloat(taxesOrFees);
-    const num6=  parseFloat(etiquetElet);
+    const num6 = parseFloat(etiquetElet);
 
     if (!isNaN(num2) && !isNaN(num3) && !isNaN(num4) && !isNaN(num5) && !isNaN(num6)) {
-      const consumptionResult = num2 * num3 * num4 * num6;
+      const consumptionResult = num2 * num3 * num4 * (num6/60);
       const finalResult = (consumptionResult + num5).toFixed(2);
 
-      // Obtenha uma referência para a base de dados
+      
       const database = getDatabase();
       const userResultsRef = ref(database, `userResults/${uid}`);
 
-      // Crie um novo nó no banco de dados
+      
       const newUserResultRef = push(userResultsRef);
 
-      // Defina os dados no novo nó
+      
       update(newUserResultRef, {
-        company: num1,
+        company: selectedOption,
         daily_hours: num2,
         kwh_price: num3,
         days_of_month: num4,
@@ -55,8 +55,8 @@ const Simulator = () => {
         timestamp: new Date().toISOString(),
       });
 
-      // Exibir um alerta com o resultado
-      Alert.alert('Resultado', `Custo total: ${finalResult}`);
+      
+      Alert.alert('Resultado', `Custo total (€): ${finalResult} € \n Custo Total (kWh): ${((num6/60)*num2*num4).toFixed(2)} kWh`);
     } else {
       setResult(null);
     }
@@ -65,80 +65,60 @@ const Simulator = () => {
   const navigation = useNavigation();
   const handleGoBack = () => {
     navigation.goBack();
-  }
+  };
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <SafeAreaView style={styles.container}>
-        {/* Header */}
+        
         <View style={styles.header}>
           <TouchableOpacity onPress={handleGoBack}>
-              <Image source={require('../../assets/go_back.png')} style={styles.buttonStyle} />
-            </TouchableOpacity>
-            <View style={styles.headerTextContainer}>
-                <Text style={styles.headerText}>Simulator</Text>
-            </View>
-         
+            <Image source={require('../../assets/go_back.png')} style={styles.buttonStyle} />
+          </TouchableOpacity>
+          <View style={styles.headerTextContainer}>
+            <Text style={styles.headerText}>Simulator</Text>
+          </View>
         </View>
         <ScrollView contentContainerStyle={styles.scrollviewcontent} showsVerticalScrollIndicator={false}>
-          {/* Conteúdo da tela */}
-          <Text style={styles.textAboveDropdown}>{'\n\n\n\n'}Escolha uma companhia (kWh)</Text>
+          
 
-          <RNPickerSelect
-            onValueChange={(value) => {
-              setSelectedOption(value);
-              // Defina os valores automaticamente com base na escolha do usuário
-              setEtiquetaElet(value === 'EDP' ? '0.07' : value === 'Repsol' ? '0.06' : '');
-            }}
-            items={[
-              { label: 'Selecione uma Opção', value: null },
-              { label: 'EDP', value: 'EDP' },
-              { label: 'Repsol', value: 'Repsol' },
-              { label: 'Other', value: 'Other' },
-            ]}
-            style={pickerSelectStyles}
-            value={selectedOption}
-            
-          />
-
-
-          <Text style={styles.inputLabel}>Consumo diário em horas</Text>
+          <Text style={{ ...styles.inputLabel, marginTop: hp(5) }}>Consumo diário em horas</Text>
           <TextInput
             style={styles.input}
             placeholder="Horas"
             keyboardType="numeric"
             value={dailyConsumptionHours}
             onChangeText={(value) => {
-              // Verifica se o valor é um número
+              if (value === '') {
+                setDailyConsumptionHours(''); 
+                return;
+              }
+              
               if (!isNaN(value)) {
-                // Converte o valor para número inteiro
+                
                 let num = parseInt(value);
-          
-                // Limita o número entre 0 e 24
+
+                
                 if (num >= 0 && num <= 24) {
-                  setDailyConsumptionHours(num.toString()); // Atualiza o estado com o valor válido
+                  setDailyConsumptionHours(num.toString());
                 } else if (num > 24) {
-                  Alert.alert('Você só pode inserir um valor de 0 a 24')// Define como 24 se o valor for maior que 24
-                  // Aqui você pode adicionar um alerta ao usuário informando que o valor foi ajustado para 24
-                  // ou outro feedback adequado ao seu aplicativo
+                  Alert.alert('Você só pode inserir um valor de 0 a 24'); 
+                  setDailyConsumptionHours(''); 
+                  
                 }
               } else {
-                // Caso o valor não seja um número, você pode limpar o valor ou mostrar um aviso
-                setDailyConsumptionHours(''); // Limpa o valor do estado
-                // Aqui você pode adicionar um alerta ao usuário informando que apenas números são permitidos
-                // ou outro feedback adequado ao seu aplicativo
+               
+                setDailyConsumptionHours(''); 
+               
               }
-            }
-          }
+            }}
           />
 
-
-
-          <Text style={styles.inputLabel}>kWh da Etiquetagem Elétrica</Text>
+          <Text style={styles.inputLabel}>kWh da Etiquetagem Elétrica (Ex. 4.7)</Text>
           <TextInput
             style={styles.input}
             placeholder="Preço"
-            keyboardType="numeric"
+            keyboardType="numbers-and-punctuation"
             value={etiquetElet}
             onChangeText={(text) => setEtiquetaElet(text)}
           />
@@ -151,9 +131,7 @@ const Simulator = () => {
             value={nationalPricePerKWh}
             onChangeText={(text) => setNationalPricePerKWh(text)}
           />
-
-
-
+          <Text style={{marginTop:hp(-1.2), marginBottom:hp(1.5), marginLeft:hp(2)}}>* 0.17 é o valor médio das companhias</Text>
 
           <Text style={styles.inputLabel}>Dias do mês</Text>
           <TextInput
@@ -162,32 +140,32 @@ const Simulator = () => {
             keyboardType="numeric"
             value={daysOfMonth}
             onChangeText={(value) => {
-              // Verifica se o valor é um número
+              if (value === '') {
+                setDaysOfMonth(''); 
+                return;
+              }
+              
               if (!isNaN(value)) {
-                // Converte o valor para número inteiro
+                
                 let num = parseInt(value);
-          
-                // Limita o número entre 0 e 24
+
+                
                 if (num >= 0 && num <= 31) {
-                  setDaysOfMonth(num.toString()); // Atualiza o estado com o valor válido
+                  setDaysOfMonth(num.toString()); 
                 } else if (num > 31) {
-                  Alert.alert('Você só pode inserir um número de 0 a 31')// Define como 24 se o valor for maior que 24
-                  setDaysOfMonth(''); 
-                  // Aqui você pode adicionar um alerta ao usuário informando que o valor foi ajustado para 24
-                  // ou outro feedback adequado ao seu aplicativo
+                  Alert.alert('Você só pode inserir um número de 0 a 31'); 
+                  setDaysOfMonth('');
+                  
                 }
               } else {
-                // Caso o valor não seja um número, você pode limpar o valor ou mostrar um aviso
-                setDaysOfMonth(''); // Limpa o valor do estado
-                // Aqui você pode adicionar um alerta ao usuário informando que apenas números são permitidos
-                // ou outro feedback adequado ao seu aplicativo
+                
+                setDaysOfMonth(''); 
+               
               }
             }}
           />
 
-
-
-          <Text style={styles.inputLabel}>Taxas/Impostos</Text>
+          <Text style={styles.inputLabel}>Taxas / Impostos</Text>
           <TextInput
             style={styles.input}
             placeholder="Insira taxas/impostos"
@@ -200,7 +178,8 @@ const Simulator = () => {
 
           {result !== null && (
             <View style={styles.resultContainer}>
-              <Text style={styles.resultText}>Custo Total: {result}</Text>
+              <Text style={styles.resultText}>Custo Total (Em EURO): {result} €</Text>
+              <Text style={styles.resultText}>Custo Total (Em kWh): {result} kWh</Text>
             </View>
           )}
 
@@ -209,7 +188,6 @@ const Simulator = () => {
             style={styles.image}
           />
         </ScrollView>
-        
       </SafeAreaView>
     </TouchableWithoutFeedback>
   );
@@ -244,8 +222,8 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginVertical: hp(2),
-    textAlign: 'center', // centralizar o texto
-    marginLeft:hp(-4)
+    textAlign: 'center', 
+    marginLeft: hp(-4),
   },
   title: {
     fontSize: 24,
@@ -278,19 +256,19 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   image: {
-    marginTop: 20,
+    marginTop: hp(5),
     width: wp(90),
-    height: hp(15),
+    height: hp(20),
+    resizeMode: 'stretch',
   },
   scrollviewcontent: {
     flexDirection: 'column',
-    paddingBottom: hp(15),
+    paddingBottom: hp(25),
   },
   buttonStyle: {
-    height: hp(4), // ajuste a altura conforme necessário
-    width: hp(4), // ajuste a largura conforme necessário
+    height: hp(4), 
+    width: hp(4), 
   },
-  
 });
 
 const pickerSelectStyles = StyleSheet.create({
@@ -301,8 +279,8 @@ const pickerSelectStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'gray',
     borderRadius: 4,
-    color: 'red', // Altere a cor do texto aqui
-    paddingRight: 30, // para garantir que o texto não seja cortado
+    color: 'red', 
+    paddingRight: 30, 
   },
   inputAndroid: {
     fontSize: 16,
@@ -311,8 +289,8 @@ const pickerSelectStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'gray',
     borderRadius: 4,
-    color: 'red', // Altere a cor do texto aqui
-    paddingRight: 30, // para garantir que o texto não seja cortado
+    color: 'red', 
+    paddingRight: 30, 
   },
 });
 

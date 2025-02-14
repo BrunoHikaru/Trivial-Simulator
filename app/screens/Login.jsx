@@ -10,21 +10,19 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   ImageBackground,
-  Button,
   TouchableOpacity,
   Image,
   Platform,
   Dimensions,
-  Linking
+  Linking,
+  ScrollView
 } from 'react-native';
 import Checkbox from 'expo-checkbox';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile } from 'firebase/auth';
-import { StatusBar } from 'expo-status-bar';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile, sendEmailVerification } from 'firebase/auth';
 import { ButtonGroup } from 'react-native-elements';
 import { FIREBASE_AUTH } from '../../FirebaseConfig';
 import { useNavigation } from '@react-navigation/native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import {widthPercentageToDP as wp, heightPercentageToDP as hp} from 'react-native-responsive-screen';
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -52,7 +50,7 @@ const Login = () => {
       console.log(response);
     } catch (error) {
       console.log(error);
-      alert('Sign In failed: ' + error.message);
+      alert('Login Falhou');
     } finally {
       setLoading(false);
     }
@@ -61,53 +59,65 @@ const Login = () => {
   const signUp = async () => {
     setLoading(true);
     try {
+      if (!acceptTerms) {
+        alert('Você precisa aceitar os termos e condições para criar uma conta.');
+        setLoading(false);
+        return;
+      }
+
       if (displayName && displayName.trim() !== '') {
         const response = await createUserWithEmailAndPassword(auth, email, password);
         console.log(response);
 
         const user = response.user;
 
-        // Enviar email de verificação
+       
         await sendEmailVerification(user);
 
-        // Atualizar o perfil com o displayName
+        
         await updateProfile(user, { displayName });
 
-        // Limpar os campos
+        
         setDisplayName('');
         setEmail('');
         setPassword('');
 
         alert('Um email de verificação foi enviado. Por favor, verifique seu email.');
 
-        // Mudar para a tela de login
+        
         setSelectedIndex(0);
       } else {
         alert('Por favor, insira seu nome para criar uma conta.');
       }
     } catch (error) {
       console.log(error);
-      alert('Falha no registro: ' + error.message);
+      alert('Falha no registro');
     } finally {
       setLoading(false);
     }
   };
 
+  const renderForgotPassword = () => (
+    <>
+      <TextInput
+        value={email}
+        style={styles.input}
+        placeholder='Digite seu email'
+        autoCapitalize='none'
+        onChangeText={(text) => setEmail(text)}
+      />
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity onPress={resetPassword} style={styles.button}>
+          <Text style={styles.buttonText}>Redefinir Senha</Text>
+        </TouchableOpacity>
+      </View>
+    </>
+  );
+
+
   const handlePressTerms = () => {
-    // Aqui você pode colocar o URL para os termos e condições da sua aplicação
     const url = 'https://intellion.pt/termos-e-condicoes-trivial-simulator/';
     Linking.openURL(url);
-  };
-
-  // Função para enviar o email de verificação
-  const sendEmailVerification = async (user) => {
-    try {
-      // Enviar email de verificação
-      await sendPasswordResetEmail(auth, user.email);
-    } catch (error) {
-      console.log(error);
-      alert('Falha ao enviar o e-mail de verificação: ' + error.message);
-    }
   };
 
   const resetPassword = async () => {
@@ -122,6 +132,7 @@ const Login = () => {
 
   const renderLogin = () => (
     <>
+
       <TextInput
         value={email}
         style={styles.input}
@@ -139,7 +150,7 @@ const Login = () => {
       />
       <View style={styles.forgotPasswordContainer}>
         <Text style={styles.forgotPasswordText} onPress={() => setSelectedIndex(2)}>
-          Esqueceu sua senha?
+          Esqueceu-se da sua senha?
         </Text>
       </View>
       <View style={styles.buttonContainer}>
@@ -149,30 +160,7 @@ const Login = () => {
           </Text>
         </TouchableOpacity>
       </View>
-    </>
-  );
 
-  const renderForgotPassword = () => (
-    <>
-      <TextInput
-        value={email}
-        style={styles.input}
-        placeholder='Email para redefinição de senha'
-        autoCapitalize='none'
-        onChangeText={(text) => setEmail(text)}
-      />
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity onPress={resetPassword} style={styles.button}>
-          <Text style={styles.buttonText}>
-            Enviar
-          </Text>
-        </TouchableOpacity>
-      </View>
-      <View style={styles.forgotPasswordContainer}>
-        <Text style={styles.forgotPasswordText} onPress={() => setSelectedIndex(0)}>
-          Voltar para Login
-        </Text>
-      </View>
     </>
   );
 
@@ -200,13 +188,17 @@ const Login = () => {
         autoCapitalize='none'
         onChangeText={(text) => setPassword(text)}
       />
-      <View style={{ flexDirection: 'row', alignItems: 'center'}}>
-        <Checkbox style={styles.checkbox} value={acceptTerms} onValueChange={setAcceptTerms} label="I accept the terms and conditions" />
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <Checkbox
+          style={styles.checkbox}
+          value={acceptTerms}
+          onValueChange={setAcceptTerms}
+          label="I accept the terms and conditions"
+        />
         <TouchableOpacity onPress={handlePressTerms}>
           <Text style={{ marginLeft: 15, color: 'white' }}>Eu aceito os <Text style={{ textDecorationLine: 'underline' }}>termos e condições</Text></Text>
         </TouchableOpacity>
-        
-        </View>
+      </View>
       {loading ? (
         <ActivityIndicator size='large' color='#0000ff' />
       ) : (
@@ -227,7 +219,7 @@ const Login = () => {
 
   const handleGoBack = () => {
     navigation.goBack();
-  }
+  };
 
   return (
     <ImageBackground
@@ -244,32 +236,29 @@ const Login = () => {
               <Text style={styles.headerText}>Trivial Simulator</Text>
             </View>
           </View>
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: hp(37) }}>
 
-          <View style={styles.welcomeContainer}>
-            <Text style={styles.instructionText}>
-              Para começar a utilizar nosso simulador, Crie uma conta. Se já está registrado,{'\n'} faça o Login
-            </Text>
-          </View>
+            <View style={styles.welcomeContainer}>
+              <Text style={styles.instructionText}>
+                Para começar a utilizar nosso simulador, Crie uma conta. Se já está registrado,{'\n'} faça o Login
+              </Text>
+            </View>
 
-          <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            style={styles.content}
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0} // ajuste conforme necessário
-          >
-            <ButtonGroup
-              onPress={(selectedIndex) => setSelectedIndex(selectedIndex)}
-              selectedIndex={selectedIndex}
-              buttons={buttons}
-              containerStyle={styles.buttonGroupContainer}
-              selectedButtonStyle={styles.selectedButtonStyle}
-              textStyle={styles.buttonText}
-            />
+            <View style={styles.content}>
+              <ButtonGroup
+                onPress={(selectedIndex) => setSelectedIndex(selectedIndex)}
+                selectedIndex={selectedIndex}
+                buttons={buttons}
+                containerStyle={styles.buttonGroupContainer}
+                selectedButtonStyle={styles.selectedButtonStyle}
+                textStyle={styles.buttonText}
+              />
 
-            {selectedIndex === 0 && renderLogin()}
-            {selectedIndex === 1 && renderSignUp()}
-            {selectedIndex === 2 && renderForgotPassword()}
-          </KeyboardAvoidingView>
-          
+              {selectedIndex === 0 && renderLogin()}
+              {selectedIndex === 1 && renderSignUp()}
+              {selectedIndex === 2 && renderForgotPassword()}
+            </View>
+          </ScrollView>
         </SafeAreaView>
       </TouchableWithoutFeedback>
     </ImageBackground>
@@ -291,7 +280,7 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: 'center',
     justifyContent: 'space-between',
-  
+
     borderRadius: wp(5),
     borderTopLeftRadius: 0,
     borderTopRightRadius: 0,
@@ -316,9 +305,10 @@ const styles = StyleSheet.create({
     marginVertical: hp('5%'),
   },
   content: {
-    flex: 1,
+
     paddingHorizontal: wp('5%'),
-    
+
+
   },
   input: {
     marginVertical: hp('1%'),
@@ -355,7 +345,7 @@ const styles = StyleSheet.create({
     marginVertical: hp('2%'),
   },
   forgotPasswordText: {
-    color: 'blue',
+    color: 'white',
     textDecorationLine: 'underline',
   },
   buttonStyle: {

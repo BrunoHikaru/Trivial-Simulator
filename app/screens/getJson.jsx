@@ -24,7 +24,7 @@ const GetJson = () => {
       {jsonData && (
         <View>
           <Text>{JSON.stringify(jsonData, null, 2)}</Text>
-          {/* Renderize os dados conforme necessário */}
+          
         </View>
       )}
     </View>

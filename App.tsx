@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { FIREBASE_AUTH } from './FirebaseConfig';
 import Home from './app/screens/Home';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Ionicons, FontAwesome5, Feather, Entypo,AntDesign,Foundation  } from '@expo/vector-icons'; // Import icons
+import { Ionicons, FontAwesome5, Feather, Entypo,AntDesign,Foundation  } from '@expo/vector-icons'; 
 import Profile from './app/screens/Profile';
 import Statistics from './app/screens/Statistics';
 import Simulator from './app/screens/Simulator';
@@ -27,6 +27,10 @@ import EstatisticasCalculo from './app/screens/EstatisticasCalculo';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import EquipamentoScreen from './app/screens/EquipamentoScreen';
 import CozinhaDicas from './app/screens/CozinhaDicas';
+import EditEquipamento from './app/screens/EditEquipamento';
+import { usePushNotifications } from './usePushNotifications';
+import EditProfile from './app/screens/EditProfile';
+
 
 
 const dicasStack=createNativeStackNavigator();
@@ -41,6 +45,8 @@ const InsideStack=createNativeStackNavigator();
 
 const TabNavigator=createNativeStackNavigator();
 
+
+
 var iconHeight=26;
 var iconWidth=26;
 
@@ -51,6 +57,7 @@ function simuladores(){
       <Stack.Screen name='Simulator' component={Simulator} options={{headerShown:false}}/>
       <Stack.Screen name='EletrodomesticosForm' component={EletrodomesticosForm} options={{headerShown:false}}/>
       <Stack.Screen name='FormEquipamentos' component={FormEquipamentos} options={{headerShown:false}}/>
+      
     </TabNavigator.Navigator>
   )
 }
@@ -88,7 +95,9 @@ function HomeNavigator() {
       <Stack.Screen name='EstatisticasCalculo' component={EstatisticasCalculo} options={{headerShown:false}}/>
       <Stack.Screen name='EquipamentoScreen' component={EquipamentoScreen} options={{headerShown:false}}/>
       <Stack.Screen name='Profile' component={Profile} options={{headerShown:false}}/>
-      {/* Adicione mais telas específicas da Statistics aqui, se necessário */}
+      <Stack.Screen name='EditEquipamento' component={EditEquipamento} options={{headerShown:false}}/>
+      <Stack.Screen name='EditProfile' component={EditProfile} options={{headerShown:false}}/>
+      
     </Stack.Navigator>
   );
 }
@@ -99,7 +108,7 @@ function StatisticsNavigator() {
       <Stack.Screen name="Statistics" component={Statistics} options={{ headerShown: false }} />
       <Stack.Screen name="List" component={List} options={{ headerShown: false }} />
       
-      {/* Adicione mais telas específicas da Statistics aqui, se necessário */}
+      
     </Stack.Navigator>
   );
 }
@@ -108,6 +117,9 @@ function StatisticsNavigator() {
 
 
 export default function App() {
+
+  const expoPushToken=usePushNotifications();
+console.log("Token: ",expoPushToken);
   
   const [user,setUser]=useState<User | null>(null);
 
@@ -123,9 +135,9 @@ export default function App() {
     <NavigationContainer >
         {user ? (
           <Tab.Navigator screenOptions={{ 
-            tabBarStyle: { backgroundColor: 'white',position: 'absolute', bottom: 25, left: 30, right: 30, elevation: 8, borderRadius:25, marginTop:17}, // Set background color
-            tabBarActiveTintColor: '#5F8CA6', // Set active icon color
-            tabBarInactiveTintColor: 'gray', // Set inactive icon color
+            tabBarStyle: { backgroundColor: 'white',position: 'absolute', bottom: 25, left: 30, right: 30, elevation: 8, borderRadius:25, marginTop:17}, 
+            tabBarActiveTintColor: '#5F8CA6', 
+            tabBarInactiveTintColor: 'gray', 
           }}>
             
             <Tab.Screen name="Home" component={HomeNavigator} options={{headerShown: false ,tabBarIcon:({color,size})=>(
@@ -153,7 +165,7 @@ export default function App() {
           </Stack.Navigator>
         )}
         
-      
+      <StatusBar barStyle={'default'}/>
     </NavigationContainer>
  
   );

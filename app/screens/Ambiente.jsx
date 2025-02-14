@@ -13,7 +13,7 @@ const Ambiente =()=> {
 
     return (
       <SafeAreaView style={styles.container}>
-      {/* Header */}
+      
       <View style={styles.header}>
         <Text style={styles.headerText}>Divisões</Text>
       </View>

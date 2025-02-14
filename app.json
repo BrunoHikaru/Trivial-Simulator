@@ -2,9 +2,9 @@
   "expo": {
     "name": "Trivial Simulator",
     "slug": "TrivialSimulator",
-    "version": "1.0.1",
+    "version": "1.0.8",
     "orientation": "portrait",
-    "icon": "./assets/icon.jpg",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash.png",
@@ -16,9 +16,12 @@
     ],
     "ios": {
       "supportsTablet": true,
+      "googleServicesFile": "./GoogleService-Info.plist",
       "bundleIdentifier": "com.brunohikaru.TrivialSimulator"
     },
     "android": {
+      "versionCode":9,
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -32,6 +35,18 @@
       "eas": {
         "projectId": "e91df373-2c28-41f5-ba51-51bc3af2da56"
       }
-    }
+    },
+    "plugins": [
+      "@react-native-firebase/app",
+      "@react-native-firebase/messaging",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
+        }
+      ]
+    ]
   }
 }
